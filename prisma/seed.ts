@@ -4,10 +4,9 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const superAdminPhone = '01900000000';
-  const hashedPassword = await bcrypt.hash('superadmin123', 10);
+  const superAdminPhone = 'admin';
+  const hashedPassword = await bcrypt.hash('superadmin@123', 10);
 
-  // Upsert Super Admin
   const superAdmin = await prisma.user.upsert({
     where: { phone: superAdminPhone },
     update: {

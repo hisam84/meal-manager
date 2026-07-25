@@ -4,17 +4,22 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  const superAdminPhone = '01900000000';
-  const hashedPassword = await bcrypt.hash('superadmin123', 10);
+  const superAdminPhone = 'admin';
+  const hashedPassword = await bcrypt.hash('superadmin@123', 10);
 
-  const superAdmin = await prisma.user.upsert({
-    where: { phone: superAdminPhone },
-    update: {
-      role: 'SUPERADMIN',
-      active: true,
-      password: hashedPassword,
-    },
-    create: {
+  // Delete previous seed if needed or update
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { phone: 'admin' },
+        { phone: '01900000000' },
+        { email: 'superadmin@messmealtracker.com' }
+      ]
+    }
+  });
+
+  const superAdmin = await prisma.user.create({
+    data: {
       name: 'Super Admin',
       phone: superAdminPhone,
       email: 'superadmin@messmealtracker.com',
