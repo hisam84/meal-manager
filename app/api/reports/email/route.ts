@@ -31,8 +31,9 @@ export async function POST(req: Request) {
           </tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Members</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${summary.totalMembers}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Meals</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${summary.totalMeals}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Expenses</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${formatCurrency(summary.totalExpenses)}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #0284c7;">Meal Rate</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold; color: #0284c7;">${formatCurrency(summary.mealRate)}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Bazar Expenses</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${formatCurrency(summary.totalExpenses)}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Cook Bill (বুয়ার বিল)</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #0284c7;">${formatCurrency(summary.totalCookBill)}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #0284c7;">Meal Rate (Bazar / Total Meals)</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold; color: #0284c7;">${formatCurrency(summary.mealRate)}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd;">Total Payments Recorded</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${formatCurrency(summary.totalPayments)}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; color: #16a34a;">Total Receivable</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #16a34a;">${formatCurrency(summary.totalReceivable)}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; color: #dc2626;">Total Payable</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #dc2626;">${formatCurrency(summary.totalPayable)}</td></tr>
