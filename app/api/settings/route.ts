@@ -5,18 +5,28 @@ import { getCurrentUser } from '@/lib/auth';
 export async function GET() {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || !currentUser.messId) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    let messId = currentUser.messId;
+    if (!messId) {
+      const defaultMess = await prisma.mess.findFirst();
+      messId = defaultMess?.id || null;
+    }
+
+    if (!messId) {
+      return NextResponse.json({ error: 'No active mess found' }, { status: 404 });
+    }
+
     let settings = await prisma.messSetting.findUnique({
-      where: { messId: currentUser.messId },
+      where: { messId },
     });
 
     if (!settings) {
       settings = await prisma.messSetting.create({
         data: {
-          messId: currentUser.messId,
+          messId,
           breakfastWeight: 1.0,
           lunchWeight: 1.0,
           dinnerWeight: 1.0,
@@ -34,12 +44,22 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || !currentUser.messId) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
       return NextResponse.json({ error: 'Only Admins and Managers can update meal settings' }, { status: 403 });
+    }
+
+    let messId = currentUser.messId;
+    if (!messId) {
+      const defaultMess = await prisma.mess.findFirst();
+      messId = defaultMess?.id || null;
+    }
+
+    if (!messId) {
+      return NextResponse.json({ error: 'No active mess found to update' }, { status: 404 });
     }
 
     const { breakfastWeight, lunchWeight, dinnerWeight } = await req.json();
@@ -49,14 +69,14 @@ export async function POST(req: Request) {
     const dw = Math.max(0, Number(dinnerWeight) || 0);
 
     const settings = await prisma.messSetting.upsert({
-      where: { messId: currentUser.messId },
+      where: { messId },
       update: {
         breakfastWeight: bw,
         lunchWeight: lw,
         dinnerWeight: dw,
       },
       create: {
-        messId: currentUser.messId,
+        messId,
         breakfastWeight: bw,
         lunchWeight: lw,
         dinnerWeight: dw,
@@ -65,7 +85,7 @@ export async function POST(req: Request) {
 
     // Re-calculate all meal totals in mess based on new settings
     const meals = await prisma.meal.findMany({
-      where: { messId: currentUser.messId },
+      where: { messId },
     });
 
     for (const meal of meals) {
