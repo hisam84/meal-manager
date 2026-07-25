@@ -5,6 +5,7 @@ export interface MonthlySummaryResult {
   totalMembers: number;
   totalMeals: number;
   totalExpenses: number;
+  totalCookBill: number;
   mealRate: number;
   totalPayments: number;
   totalReceivable: number;
@@ -19,6 +20,7 @@ export interface MonthlySummaryResult {
     dinner: number;
     totalMeals: number;
     mealCost: number;
+    cookBill: number;
     paid: number;
     balance: number;
     status: 'Receivable' | 'Payable' | 'Settled';
