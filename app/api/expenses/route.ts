@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
+import { isUserMealManagerForDate } from '@/lib/manager-duty';
 
 export async function GET(req: Request) {
   try {
@@ -45,15 +46,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Role safeguard: Only ADMIN and MANAGER can add/edit expenses
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
-      return NextResponse.json({ error: 'Only Admins and Managers can add expenses' }, { status: 403 });
-    }
-
     const { id, amount, description, category, date, spentById } = await req.json();
 
     if (!amount || !description || !category || !date) {
       return NextResponse.json({ error: 'Amount, description, category, and date are required' }, { status: 400 });
+    }
+
+    // Duty date check
+    const isAuthorized = await isUserMealManagerForDate(currentUser, date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to add expenses for dates within your elected manager term.' },
+        { status: 403 }
+      );
     }
 
     const numericAmount = Number(amount);
@@ -101,15 +106,25 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
-      return NextResponse.json({ error: 'Only Admins and Managers can delete expenses' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
+    }
+
+    const expense = await prisma.expense.findUnique({ where: { id } });
+    if (!expense) {
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+    }
+
+    // Duty date check
+    const isAuthorized = await isUserMealManagerForDate(currentUser, expense.date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to delete expenses for dates within your elected manager term.' },
+        { status: 403 }
+      );
     }
 
     await prisma.expense.delete({ where: { id } });

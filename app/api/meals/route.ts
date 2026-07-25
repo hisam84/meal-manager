@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
+import { isUserMealManagerForDate } from '@/lib/manager-duty';
 
 export async function GET(req: Request) {
   try {
@@ -48,22 +49,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Role safeguard: Only ADMIN, MANAGER, SUPERADMIN can add or edit meals
-    if (currentUser.role === 'MEMBER') {
-      return NextResponse.json(
-        { error: 'Standard members cannot modify meals. Only Admins and Managers can manage meals.' },
-        { status: 403 }
-      );
-    }
-
     const body = await req.json();
     const { userId, date, breakfast = 0, lunch = 0, dinner = 0, note = '', mode = 'ON_ONCE' } = body;
-
-    const targetUserId = userId || currentUser.id;
 
     if (!date) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
     }
+
+    // Manager term duty authorization check
+    const isAuthorized = await isUserMealManagerForDate(currentUser, date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to manage meals for dates within your elected manager term.' },
+        { status: 403 }
+      );
+    }
+
+    const targetUserId = userId || currentUser.id;
 
     const b = Math.max(0, Number(breakfast) || 0);
     const l = Math.max(0, Number(lunch) || 0);
@@ -140,14 +142,6 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Role safeguard: Only ADMIN, MANAGER, SUPERADMIN can delete meals
-    if (currentUser.role === 'MEMBER') {
-      return NextResponse.json(
-        { error: 'Standard members cannot delete meals. Only Admins and Managers can manage meals.' },
-        { status: 403 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
@@ -158,6 +152,15 @@ export async function DELETE(req: Request) {
     const meal = await prisma.meal.findUnique({ where: { id } });
     if (!meal) {
       return NextResponse.json({ error: 'Meal record not found' }, { status: 404 });
+    }
+
+    // Manager duty authorization check for meal deletion date
+    const isAuthorized = await isUserMealManagerForDate(currentUser, meal.date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to delete meals for dates within your elected manager term.' },
+        { status: 403 }
+      );
     }
 
     await prisma.meal.delete({ where: { id } });

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
+import { isUserMealManagerForDate } from '@/lib/manager-duty';
 
 export async function GET(req: Request) {
   try {
@@ -22,7 +23,6 @@ export async function GET(req: Request) {
     if (userId) {
       where.userId = userId;
     } else if (currentUser.role === 'MEMBER') {
-      // Standard members can only see their own payments
       where.userId = currentUser.id;
     }
 
@@ -49,14 +49,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
-      return NextResponse.json({ error: 'Only Admins and Managers can record member payments' }, { status: 403 });
-    }
-
     const { id, userId, amount, date, note } = await req.json();
 
     if (!userId || !amount || !date) {
       return NextResponse.json({ error: 'Member, amount, and date are required' }, { status: 400 });
+    }
+
+    // Duty date check
+    const isAuthorized = await isUserMealManagerForDate(currentUser, date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to record payments for dates within your elected manager term.' },
+        { status: 403 }
+      );
     }
 
     const numericAmount = Number(amount);
@@ -102,15 +107,25 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
-      return NextResponse.json({ error: 'Only Admins and Managers can delete payments' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'Payment ID is required' }, { status: 400 });
+    }
+
+    const payment = await prisma.payment.findUnique({ where: { id } });
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+    }
+
+    // Duty date check
+    const isAuthorized = await isUserMealManagerForDate(currentUser, payment.date);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'You are only authorized to delete payments for dates within your elected manager term.' },
+        { status: 403 }
+      );
     }
 
     await prisma.payment.delete({ where: { id } });

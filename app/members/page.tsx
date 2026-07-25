@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { Users, UserPlus, Shield, KeyRound, UserCheck, UserX, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Users, UserPlus, KeyRound, UserCheck, UserX, Trash2, CheckCircle2, AlertCircle, Calendar, ShieldAlert } from 'lucide-react';
 
 export default function MembersPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<any[]>([]);
+  const [managerTerms, setManagerTerms] = useState<any[]>([]);
 
   // Form states for adding member
   const [name, setName] = useState('');
@@ -18,6 +19,12 @@ export default function MembersPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('MEMBER');
+
+  // Form states for electing Manager
+  const [electUserId, setElectUserId] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+  const [electing, setElecting] = useState(false);
 
   // Password reset state
   const [resetModalUser, setResetModalUser] = useState<any>(null);
@@ -35,6 +42,7 @@ export default function MembersPage() {
         } else {
           setUser(data.user);
           fetchMembers();
+          fetchManagerTerms();
         }
       })
       .catch(() => router.push('/login'))
@@ -45,7 +53,18 @@ export default function MembersPage() {
     fetch('/api/members')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) setMembers(data);
+        if (Array.isArray(data)) {
+          setMembers(data);
+          if (data.length > 0) setElectUserId(data[0].id);
+        }
+      });
+  };
+
+  const fetchManagerTerms = () => {
+    fetch('/api/manager-terms')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setManagerTerms(data);
       });
   };
 
@@ -79,6 +98,48 @@ export default function MembersPage() {
       setMessage({ type: 'error', text: err.message });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleElectManager = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    setElecting(true);
+
+    try {
+      const res = await fetch('/api/manager-terms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: electUserId,
+          startDate,
+          endDate,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to elect manager');
+
+      setMessage({ type: 'success', text: 'নির্দিষ্ট মেয়াদের জন্য ম্যানেজার সফলভাবে নির্বাচন করা হয়েছে!' });
+      fetchMembers();
+      fetchManagerTerms();
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setElecting(false);
+    }
+  };
+
+  const handleRevokeManagerTerm = async (id: string) => {
+    if (!confirm('আপনি কি এই ম্যানেজারিয়ালের মেয়াদ বাতিল করতে চান?')) return;
+
+    try {
+      const res = await fetch(`/api/manager-terms?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to revoke term');
+      fetchMembers();
+      fetchManagerTerms();
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -162,28 +223,140 @@ export default function MembersPage() {
       <Sidebar user={user} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="মেম্বার ব্যবস্থাপনা (Admin)" />
+        <Navbar user={user} title="মেম্বার ও ম্যানেজার নির্বাচন" />
 
         <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+          {message && (
+            <div
+              className={`p-4 rounded-xl text-sm flex items-center gap-2 ${
+                message.type === 'success'
+                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300'
+              }`}
+            >
+              {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
+              <span>{message.text}</span>
+            </div>
+          )}
+
+          {/* Elect Meal Manager Section (Date Specific Manager Assignment) */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-sky-200 dark:border-sky-900/60 shadow-sm space-y-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span>নির্দিষ্ট মেয়াদের জন্য ম্যানেজার নির্বাচন করুন (Elect Meal Manager)</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              নির্বাচিত ম্যানেজার শুধুমাত্র তার নির্ধারিত শুরুর ও শেষ তারিখের মধ্যে মেস হিসাব, মিল ইনপুট ও খরচ এন্ট্রি করতে পারবেন।
+            </p>
+
+            <form onSubmit={handleElectManager} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  ম্যানেজার নির্বাচন
+                </label>
+                <select
+                  value={electUserId}
+                  onChange={(e) => setElectUserId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.phone}) - {m.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  দায়িত্ব শুরুর তারিখ (Start Date)
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  দায়িত্ব শেষ তারিখ (End Date)
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div className="sm:col-span-3 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={electing}
+                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all text-sm disabled:opacity-50"
+                >
+                  {electing ? 'সংরক্ষণ হচ্ছে...' : 'ম্যানেজার দায়িত্ব প্রদান করুন'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active Manager Terms List */}
+          {managerTerms.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-amber-600" />
+                <span>ম্যানেজারদের দায়িত্ব পালনের সময়সীমা তালিকা</span>
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3 rounded-l-lg">ম্যানেজার</th>
+                      <th className="px-4 py-3">শুরুর তারিখ</th>
+                      <th className="px-4 py-3">শেষ তারিখ</th>
+                      <th className="px-4 py-3">স্ট্যাটাস</th>
+                      <th className="px-4 py-3 rounded-r-lg text-right">অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {managerTerms.map((term) => (
+                      <tr key={term.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{term.user?.name}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.startDate}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.endDate}</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                            সক্রিয় মেয়াদ
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleRevokeManagerTerm(term.id)}
+                            className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors text-xs font-semibold"
+                          >
+                            বাতিল করুন
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Add Member Form */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span>নতুন মেম্বার যুক্ত করুন</span>
             </h2>
-
-            {message && (
-              <div
-                className={`p-4 rounded-xl text-sm flex items-center gap-2 ${
-                  message.type === 'success'
-                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300'
-                }`}
-              >
-                {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                <span>{message.text}</span>
-              </div>
-            )}
 
             <form onSubmit={handleAddMember} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
@@ -260,7 +433,7 @@ export default function MembersPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all disabled:opacity-50"
+                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all disabled:opacity-50 text-sm"
                 >
                   {saving ? 'যোগ হচ্ছে...' : 'মেম্বার যুক্ত করুন'}
                 </button>
@@ -370,13 +543,13 @@ export default function MembersPage() {
                 <button
                   type="button"
                   onClick={() => setResetModalUser(null)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold text-xs"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-sky-600/30"
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-sky-600/30"
                 >
                   রিসেট করুন
                 </button>
