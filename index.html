@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mess Meal Tracker - Smart Mess Management Application</title>
+  <meta name="description" content="Comprehensive, modern frontend web application to manage mess meals, expenses, member balances, and monthly calculations.">
+  <link rel="stylesheet" href="style.css">
+  <!-- RemixIcon for modern minimalist icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       TOAST CONTAINER
+       ========================================================================== -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- ==========================================================================
+       AUTHENTICATION SECTION (LOGIN / REGISTER)
+       ========================================================================== -->
+  <section id="auth-section" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-logo-icon">
+          <i class="ri-restaurant-2-line"></i>
+        </div>
+        <h1 class="auth-title">Mess Meal Tracker</h1>
+        <p class="auth-subtitle" id="auth-subtitle-text">Sign in to access your mess dashboard</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="login-phone"><i class="ri-user-line"></i> Username or Phone Number</label>
+          <input type="text" id="login-phone" class="form-control" placeholder="Enter username or phone number" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="login-password"><i class="ri-lock-password-line"></i> Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="new-password">
+            <i class="ri-eye-line password-toggle-icon" data-target="login-password" title="Toggle password visibility"></i>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="ri-login-box-line"></i> Login
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       MAIN APPLICATION CONTAINER (AUTHENTICATED)
+       ========================================================================== -->
+  <div id="app-section" class="hidden">
+    <div id="app-container">
+
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <div class="brand-icon"><i class="ri-restaurant-2-line"></i></div>
+            <span>Meal Tracker</span>
+          </div>
+          <button class="menu-toggle-btn" id="sidebar-close-btn"><i class="ri-close-line"></i></button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="mess-user-only nav-section-title" data-i18n="nav_main">Navigation</div>
+          <div class="mess-user-only nav-item active" data-view="dashboard">
+            <i class="ri-dashboard-3-line"></i>
+            <span data-i18n="nav_dashboard">Dashboard</span>
+          </div>
+          <div class="mess-user-only nav-item" data-view="meals">
+            <i class="ri-bowl-line"></i>
+            <span data-i18n="nav_meals">Meals</span>
+          </div>
+          <div class="mess-user-only nav-item" data-view="expenses">
+            <i class="ri-money-dollar-circle-line"></i>
+            <span data-i18n="nav_expenses">Expenses</span>
+          </div>
+          <div class="mess-user-only nav-item" data-view="payments">
+            <i class="ri-wallet-3-line"></i>
+            <span data-i18n="nav_payments">Payments</span>
+          </div>
+          <div class="mess-user-only nav-item" data-view="summary">
+            <i class="ri-pie-chart-2-line"></i>
+            <span data-i18n="nav_summary">Monthly Summary</span>
+          </div>
+          <div class="mess-user-only nav-item" data-view="reports">
+            <i class="ri-file-chart-line"></i>
+            <span data-i18n="nav_reports">Reports & Downloads</span>
+          </div>
+
+          <div class="nav-section-title" data-i18n="nav_admin">Administration</div>
+          <div class="superadmin-only nav-item" data-view="superadmin">
+            <i class="ri-shield-user-line text-indigo"></i>
+            <span data-i18n="nav_superadmin">Super Admin Panel</span>
+          </div>
+          <div class="mess-user-only admin-only nav-item" data-view="members">
+            <i class="ri-group-line"></i>
+            <span data-i18n="nav_members">Members</span>
+          </div>
+          <div class="mess-user-only admin-only nav-item" data-view="settings">
+            <i class="ri-settings-4-line"></i>
+            <span data-i18n="nav_settings">Backup & Settings</span>
+          </div>
+
+          <div class="nav-section-title" data-i18n="nav_account">Account</div>
+          <div class="nav-item" data-view="profile">
+            <i class="ri-user-settings-line"></i>
+            <span data-i18n="nav_profile">My Profile</span>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-badge">
+            <div class="user-avatar" id="sidebar-avatar">U</div>
+            <div class="user-info">
+              <div class="user-name" id="sidebar-user-name">User Name</div>
+              <span class="user-role-badge role-member" id="sidebar-user-role">Member</span>
+            </div>
+            <button class="icon-btn" id="logout-btn" title="Logout">
+              <i class="ri-logout-box-r-line"></i>
+            </button>
+          </div>
+        </div>
+      </aside>
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+      <!-- Main Wrapper Area -->
+      <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="menu-toggle-btn" id="menu-toggle-btn">
+              <i class="ri-menu-line"></i>
+            </button>
+            <h2 class="page-title" id="page-title">Dashboard</h2>
+          </div>
+
+          <div class="topbar-actions">
+            <!-- Global Month Selector -->
+            <div class="month-picker-container">
+              <label for="global-month-picker"><i class="ri-calendar-event-line"></i> <span data-i18n="month">Month</span>:</label>
+              <input type="month" id="global-month-picker">
+            </div>
+
+            <!-- Language Selector Toggle -->
+            <button class="btn btn-secondary btn-sm lang-toggle-btn" id="lang-toggle-btn" title="Switch English / বাংলা">
+              <i class="ri-global-line"></i> <span id="lang-toggle-label">BN</span>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button class="icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+              <i class="ri-moon-line" id="theme-toggle-icon"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dynamic Content Body -->
+        <main class="content-body">
+
+          <!-- VIEW 1: DASHBOARD -->
+          <section id="view-dashboard" class="view-section hidden">
+            <!-- KPI Cards Grid -->
+            <div class="kpi-grid" id="dashboard-kpi-container">
+              <!-- Rendered via JS based on Admin / Member role -->
+            </div>
+
+            <!-- TODAY'S PER-MEAL TIME BREAKDOWN PANEL -->
+            <div class="panel-card" style="margin-bottom: 1.5rem;">
+              <div class="panel-header">
+                <h3 class="panel-title"><i class="ri-restaurant-line"></i> <span data-i18n="today_meal_breakdown">Today's Meal Breakdown</span></h3>
+                <a href="#" class="btn btn-sm btn-secondary" id="dash-btn-go-meal-chart">
+                  <i class="ri-table-line"></i> Open Meal Chart
+                </a>
+              </div>
+              <div id="dashboard-today-meal-cards" class="kpi-grid" style="margin-bottom: 1.25rem;">
+                <!-- Mini Meal Stat Cards rendered via JS -->
+              </div>
+              <div class="table-responsive">
+                <table class="data-table" style="font-size: 0.875rem;">
+                  <thead>
+                    <tr>
+                      <th>Member</th>
+                      <th>Breakfast</th>
+                      <th>Lunch</th>
+                      <th>Dinner</th>
+                      <th>Today's Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-today-meal-tbody">
+                    <!-- Dynamic Member Rows for Today -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="dashboard-grid">
+              <!-- Left Column: Activity & Meal Chart Breakdown -->
+              <div>
+                <div class="panel-card">
+                  <div class="panel-header">
+                    <h3 class="panel-title"><i class="ri-history-line"></i> Recent Activity Log</h3>
+                  </div>
+                  <div id="dashboard-recent-activities">
+                    <!-- Dynamic Activity List -->
+                  </div>
+                </div>
+
+                <div class="panel-card">
+                  <div class="panel-header">
+                    <h3 class="panel-title"><i class="ri-pie-chart-line"></i> Expenses Category Overview</h3>
+                  </div>
+                  <div id="dashboard-expense-categories">
+                    <!-- Dynamic Expense Breakdown -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Member Balances / Quick Actions -->
+              <div>
+                <div class="panel-card" id="dashboard-member-summary-panel">
+                  <div class="panel-header">
+                    <h3 class="panel-title"><i class="ri-group-line"></i> Member Balances</h3>
+                    <a href="#" class="btn btn-sm btn-secondary" id="dash-view-all-summary">View All</a>
+                  </div>
+                  <div id="dashboard-member-balances-list">
+                    <!-- Dynamic list of member balances -->
+                  </div>
+                </div>
+
+                <div class="panel-card">
+                  <div class="panel-header">
+                    <h3 class="panel-title"><i class="ri-flashlight-line"></i> Quick Actions</h3>
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <button class="btn btn-primary btn-block admin-only" id="dash-btn-add-meal">
+                      <i class="ri-add-line"></i> Record Meal Entry
+                    </button>
+                    <button class="btn btn-secondary btn-block admin-only" id="dash-btn-add-expense">
+                      <i class="ri-money-dollar-circle-line"></i> Add Mess Expense
+                    </button>
+                    <button class="btn btn-secondary btn-block admin-only" id="dash-btn-add-payment">
+                      <i class="ri-wallet-3-line"></i> Record Member Payment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 2: MEALS -->
+          <section id="view-meals" class="view-section hidden">
+            <!-- Meal View Switcher Tabs -->
+            <div class="meal-view-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+              <button class="btn btn-primary meal-tab-btn active" id="meal-tab-excel" data-view-mode="excel">
+                <i class="ri-file-excel-2-line"></i> <span>Excel Sheet</span>
+              </button>
+              <button class="btn btn-secondary meal-tab-btn" id="meal-tab-chart" data-view-mode="chart">
+                <i class="ri-table-line"></i> <span data-i18n="daily_meal_chart">Daily Meal Chart</span>
+              </button>
+              <button class="btn btn-secondary meal-tab-btn" id="meal-tab-log" data-view-mode="log">
+                <i class="ri-history-line"></i> <span data-i18n="meal_history_log">Meal History Log</span>
+              </button>
+            </div>
+
+            <!-- CONTAINER EXCEL: MONTHLY EXCEL MATRIX SHEET (DEFAULT) -->
+            <div id="meal-excel-container">
+              <div class="excel-toolbar">
+                <div class="excel-toolbar-title">
+                  <i class="ri-file-excel-2-fill" style="font-size: 1.4rem; color: #107c41;"></i>
+                  <span>Monthly Excel Meal Sheet (<span id="excel-month-display">July 2026</span>)</span>
+                </div>
+                <div class="flex gap-2 align-center flex-wrap">
+                  <button class="btn btn-sm btn-secondary" id="btn-toggle-excel-compact" style="font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                    <i class="ri-zoom-in-line"></i> <span id="excel-compact-label">Fit Screen / Compact</span>
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-export-excel-sheet" style="font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                    <i class="ri-file-excel-line text-emerald"></i> Export CSV
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="btn-print-excel-sheet" style="font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                    <i class="ri-printer-line"></i> Print
+                  </button>
+                </div>
+              </div>
+
+              <!-- Multipliers Summary Legend for Excel View -->
+              <div style="background: var(--bg-surface); padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-top: none; font-size: 0.825rem; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                  <span><i class="ri-information-line text-indigo"></i> <strong>Legend:</strong> Click cell to edit</span> |
+                  <span><strong style="color: #107c41;">Numeric</strong> = Active</span> |
+                  <span><strong style="color: var(--text-muted); opacity: 0.5;">-</strong> = Zero</span>
+                </div>
+                <div style="font-size: 0.8rem; font-weight: 600;">
+                  <span>Multipliers: BF=<span id="excel-weight-bf">0.5</span> | Lunch=<span id="excel-weight-lunch">1.0</span> | Dinner=<span id="excel-weight-dinner">1.0</span></span>
+                </div>
+              </div>
+
+              <div class="excel-sheet-wrapper">
+                <table class="excel-table" id="monthly-excel-matrix-table">
+                  <thead id="monthly-excel-thead">
+                    <!-- Dynamic Headers (Days 1..31) -->
+                  </thead>
+                  <tbody id="monthly-excel-tbody">
+                    <!-- Dynamic Member Rows -->
+                  </tbody>
+                  <tfoot id="monthly-excel-tfoot">
+                    <!-- Dynamic Daily Totals -->
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- CONTAINER A: DAILY MEAL CHART GRID -->
+            <div id="meal-chart-container" class="hidden">
+              <div id="daily-meal-notice-banner"></div>
+
+              <!-- Date Selector & Manager Header Banner -->
+              <div class="filter-bar" style="align-items: center;">
+                <div class="filter-group" style="align-items: center;">
+                  <label for="meal-chart-date" style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">
+                    <i class="ri-calendar-line"></i> <span data-i18n="select_date">Select Date</span>:
+                  </label>
+                  <input type="date" id="meal-chart-date" class="form-control" style="width: auto; font-weight: 600;">
+                  <span class="badge badge-info" id="meal-chart-manager-badge" style="font-size: 0.85rem; padding: 0.4rem 0.75rem;">
+                    <i class="ri-user-star-line"></i> <span id="meal-chart-manager-name">No Manager</span>
+                  </span>
+                </div>
+                <button class="btn btn-primary admin-only" id="btn-open-meal-modal-chart">
+                  <i class="ri-add-line"></i> Record Custom Entry
+                </button>
+              </div>
+
+              <!-- Multipliers Info Callout -->
+              <div class="panel-card" style="margin-bottom: 1.25rem; padding: 0.85rem 1.25rem; background: var(--bg-primary); border-left: 4px solid var(--accent-primary);">
+                <div style="font-size: 0.875rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <span style="font-weight: 700; color: var(--text-primary);"><i class="ri-information-fill text-indigo"></i> Meal Calculation Multipliers:</span>
+                  <span>📌 <strong>Breakfast</strong> = <span id="chart-weight-breakfast">0.5</span> meal</span> |
+                  <span><strong>Lunch</strong> = <span id="chart-weight-lunch">1.0</span> meal</span> |
+                  <span><strong>Dinner</strong> = <span id="chart-weight-dinner">0.5</span> meal</span>
+                </div>
+              </div>
+
+              <!-- Daily Grid Table -->
+              <div class="panel-card">
+                <div class="table-responsive">
+                  <table class="data-table" id="daily-meal-grid-table">
+                    <thead>
+                      <tr>
+                        <th>Member Name</th>
+                        <th>Breakfast</th>
+                        <th>Lunch</th>
+                        <th>Dinner</th>
+                        <th>Total Meals</th>
+                        <th style="text-align: center;">Settings</th>
+                      </tr>
+                    </thead>
+                    <tbody id="daily-meal-grid-tbody">
+                      <!-- Dynamic Member Rows -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Day Total Summary -->
+                <div style="display: flex; justify-content: flex-end; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color); margin-top: 1rem;">
+                  <div style="font-size: 1rem; font-weight: 700;">
+                    Today's Total Meals: <strong id="daily-chart-day-total" style="color: var(--accent-primary); font-size: 1.2rem; margin-left: 0.35rem;">0.0</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CONTAINER B: HISTORY LOG VIEW -->
+            <div id="meal-log-container" class="hidden">
+              <div class="filter-bar">
+                <div class="filter-group">
+                  <div class="search-input-box">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="meal-search-input" class="form-control" placeholder="Search by member/note...">
+                  </div>
+                  <select id="meal-member-filter" class="form-control" style="width: auto;">
+                    <option value="all">All Members</option>
+                  </select>
+                  <input type="date" id="meal-date-filter" class="form-control" style="width: auto;">
+                  <button class="btn btn-secondary btn-sm" id="meal-filter-reset">Reset Filters</button>
+                </div>
+                <button class="btn btn-primary admin-only" id="btn-open-meal-modal">
+                  <i class="ri-add-line"></i> Add Meal Entry
+                </button>
+              </div>
+
+              <div class="panel-card">
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Member</th>
+                        <th>Breakfast</th>
+                        <th>Lunch</th>
+                        <th>Dinner</th>
+                        <th>Total Meals</th>
+                        <th>Note</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="meals-table-body">
+                      <!-- Dynamic Meals Rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 3: EXPENSES -->
+          <section id="view-expenses" class="view-section hidden">
+            <div class="filter-bar">
+              <div class="filter-group">
+                <div class="search-input-box">
+                  <i class="ri-search-line"></i>
+                  <input type="text" id="expense-search-input" class="form-control" placeholder="Search expenses...">
+                </div>
+                <select id="expense-category-filter" class="form-control" style="width: auto;">
+                  <option value="all">All Categories</option>
+                  <!-- Options generated dynamically -->
+                </select>
+                <input type="date" id="expense-date-filter" class="form-control" style="width: auto;">
+              </div>
+              <button class="btn btn-primary admin-only" id="btn-open-expense-modal">
+                <i class="ri-add-line"></i> Add Expense
+              </button>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Spent By Member</th>
+                      <th class="admin-only">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expenses-table-body">
+                    <!-- Dynamic Expense Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 4: PAYMENTS -->
+          <section id="view-payments" class="view-section hidden">
+            <div class="filter-bar">
+              <div class="filter-group">
+                <select id="payment-member-filter" class="form-control" style="width: auto;">
+                  <option value="all">All Members</option>
+                </select>
+                <input type="date" id="payment-date-filter" class="form-control" style="width: auto;">
+              </div>
+              <button class="btn btn-primary admin-only" id="btn-open-payment-modal">
+                <i class="ri-add-line"></i> Record Payment
+              </button>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Member</th>
+                      <th>Amount Paid</th>
+                      <th>Note</th>
+                      <th>Recorded By</th>
+                      <th class="admin-only">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payments-table-body">
+                    <!-- Dynamic Payment Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 5: MONTHLY SUMMARY -->
+          <section id="view-summary" class="view-section hidden">
+            <div class="kpi-grid" id="summary-kpi-container">
+              <!-- Summary KPI Cards -->
+            </div>
+
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3 class="panel-title"><i class="ri-table-line"></i> Member Calculation Breakdown</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Member</th>
+                      <th>Breakfast</th>
+                      <th>Lunch</th>
+                      <th>Dinner</th>
+                      <th>Total Meals</th>
+                      <th>Meal Bill</th>
+                      <th>Cook Bill</th>
+                      <th>Total Bill</th>
+                      <th>Total Paid</th>
+                      <th>Net Balance</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="summary-table-body">
+                    <!-- Dynamic Summary Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- MANAGER-WISE REPORT PANEL -->
+            <div class="panel-card" style="margin-top: 1.5rem;">
+              <div class="panel-header">
+                <h3 class="panel-title">
+                  <i class="ri-user-star-line text-indigo"></i> <span data-i18n="manager_report">Manager-wise Report</span>
+                </h3>
+                <div class="filter-group">
+                  <select id="summary-manager-filter" class="form-control" style="width: auto; font-size: 0.85rem;">
+                    <option value="all">All Managers</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Manager</th>
+                      <th>Term Period</th>
+                      <th>Total Days</th>
+                      <th>Total Meals</th>
+                      <th>Total Expense</th>
+                      <th>Meal Rate</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="manager-report-table-body">
+                    <!-- Dynamic Manager Report Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- COOK BILL REPORT PANEL -->
+            <div class="panel-card" id="cook-bill-report-panel" style="margin-top: 1.5rem;">
+              <div class="panel-header">
+                <h3 class="panel-title">
+                  <i class="ri-restaurant-line text-amber"></i> Cook Bill Report
+                </h3>
+                <button class="btn btn-sm btn-primary" id="btn-open-add-cook-bill-modal">
+                  <i class="ri-add-line"></i> Add Cook Bill
+                </button>
+              </div>
+              <div id="cook-bill-report-container">
+                <!-- Dynamic Cook Bill Report Rows -->
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: REPORTS & DOWNLOADS -->
+          <section id="view-reports" class="view-section hidden">
+            <!-- PRINT-ONLY HEADER BANNER -->
+            <div class="print-header-banner" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+                <div>
+                  <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0;">🍽️ MESS MEAL TRACKER</h1>
+                  <p style="font-size: 0.85rem; color: #475569; margin: 0.15rem 0 0 0;" id="print-mess-subheading">Official Mess Calculation & Billing Statement</p>
+                </div>
+                <div style="text-align: right; font-size: 0.8rem; color: #475569;">
+                  <div><strong>Report Month:</strong> <span id="print-report-month">-</span></div>
+                  <div><strong>Printed Date:</strong> <span id="print-current-date">-</span></div>
+                  <div><strong>Generated By:</strong> <span id="print-user-name">-</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter Bar & Export Actions -->
+            <div class="filter-bar">
+              <div class="filter-group">
+                <label for="reports-member-select" style="font-weight: 600; font-size: 0.85rem;"><i class="ri-user-line"></i> Select Member:</label>
+                <select id="reports-member-select" class="form-control" style="width: auto;">
+                  <option value="all">All Members</option>
+                </select>
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-secondary" id="btn-export-full-csv">
+                  <i class="ri-file-excel-line text-emerald"></i> <span data-i18n="export_full_csv">Export Full Mess CSV</span>
+                </button>
+                <button class="btn btn-primary" id="btn-print-full-statement">
+                  <i class="ri-printer-line"></i> <span data-i18n="print_full_report">Print Full Report (PDF)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Single Member Statement Card (Displayed when a specific member is selected) -->
+            <div class="panel-card hidden" id="single-member-report-card" style="border: 2px solid var(--accent-primary);">
+              <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+                <div>
+                  <h3 class="panel-title" id="single-member-report-name" style="font-size: 1.25rem;">Member Statement</h3>
+                  <div style="font-size: 0.85rem; color: var(--text-secondary);" id="single-member-report-phone">Phone: -</div>
+                </div>
+                <div class="flex gap-2">
+                  <button class="btn btn-sm btn-secondary" id="btn-export-single-csv">
+                    <i class="ri-download-line"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-primary" id="btn-print-single-pdf">
+                    <i class="ri-printer-line"></i> Print / PDF
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Mini KPI Summary for Member -->
+              <div class="kpi-grid" id="single-member-kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin: 1.25rem 0;">
+                <!-- JS populated -->
+              </div>
+
+              <!-- Member Meal Log Table -->
+              <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;"><i class="ri-bowl-line text-indigo"></i> Monthly Meal Breakdown</h4>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Breakfast</th>
+                      <th>Lunch</th>
+                      <th>Dinner</th>
+                      <th>Total Meals</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody id="single-member-meals-tbody">
+                    <!-- JS populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- All Members Reports Table -->
+            <div class="panel-card" id="all-members-report-card">
+              <div class="panel-header">
+                <h3 class="panel-title"><i class="ri-group-line"></i> Member-wise Downloadable Reports</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Member Name</th>
+                      <th>Total Meals</th>
+                      <th>Meal Bill</th>
+                      <th>Paid Amount</th>
+                      <th>Net Balance</th>
+                      <th>Status</th>
+                      <th style="text-align: center;" class="no-print">Download / Print Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-members-table-body">
+                    <!-- Dynamic Member Rows with Download Buttons -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- PRINT-ONLY FOOTER BANNER -->
+            <div class="print-footer-banner" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; margin-top: 3rem;">
+                <div style="text-align: center; width: 200px;">
+                  <div style="border-bottom: 1px solid #0f172a; height: 35px;"></div>
+                  <div style="font-size: 0.8rem; font-weight: 600; margin-top: 0.35rem;">Manager Signature</div>
+                </div>
+                <div style="text-align: center; width: 200px;">
+                  <div style="border-bottom: 1px solid #0f172a; height: 35px;"></div>
+                  <div style="font-size: 0.8rem; font-weight: 600; margin-top: 0.35rem;">Member Signature</div>
+                </div>
+              </div>
+              <div style="text-align: center; font-size: 0.75rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 0.5rem;">
+                This is an official computer-generated statement from Mess Meal Tracker. No manual alterations permitted.
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 6: MEMBERS (ADMIN ONLY) -->
+          <section id="view-members" class="view-section hidden">
+            <div class="filter-bar">
+              <div class="search-input-box">
+                <i class="ri-search-line"></i>
+                <input type="text" id="member-search-input" class="form-control" placeholder="Search members by name or phone...">
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-secondary" id="btn-open-elect-modal">
+                  <i class="ri-user-star-line"></i> Elect Meal Manager
+                </button>
+                <button class="btn btn-primary" id="btn-open-member-modal">
+                  <i class="ri-user-add-line"></i> Add New Member
+                </button>
+              </div>
+            <!-- Manager Duty Terms Schedule Panel -->
+            <div class="panel-card" style="margin-bottom: 1.25rem;">
+              <div class="panel-header">
+                <h3 class="panel-title"><i class="ri-calendar-event-line"></i> Elected Meal Manager Schedule</h3>
+              </div>
+              <div id="manager-terms-container">
+                <!-- Rendered dynamically via JS -->
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Member Name</th>
+                      <th>Phone</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Joined Date</th>
+                      <th>Total Meals</th>
+                      <th>Bill</th>
+                      <th>Paid</th>
+                      <th>Balance</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="members-table-body">
+                    <!-- Dynamic Member Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 7: PROFILE -->
+          <section id="view-profile" class="view-section hidden">
+            <div style="max-width: 600px; margin: 0 auto;">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="panel-title"><i class="ri-user-line"></i> Edit Account Details</h3>
+                </div>
+                <form id="profile-details-form">
+                  <div class="form-group">
+                    <label for="profile-name">Full Name</label>
+                    <input type="text" id="profile-name" class="form-control" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="profile-phone">Phone Number</label>
+                    <input type="tel" id="profile-phone" class="form-control" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+                </form>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="panel-title"><i class="ri-lock-password-line"></i> Change Security Password</h3>
+                </div>
+                <form id="profile-password-form">
+                  <div class="form-group">
+                    <label for="pwd-current">Current Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-current" class="form-control" required>
+                      <i class="ri-eye-line password-toggle-icon" data-target="pwd-current" title="Toggle password visibility"></i>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="pwd-new">New Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-new" class="form-control" required>
+                      <i class="ri-eye-line password-toggle-icon" data-target="pwd-new" title="Toggle password visibility"></i>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="pwd-confirm">Confirm New Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="pwd-confirm" class="form-control" required>
+                      <i class="ri-eye-line password-toggle-icon" data-target="pwd-confirm" title="Toggle password visibility"></i>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 8: SETTINGS & BACKUP (ADMIN ONLY) -->
+          <section id="view-settings" class="view-section hidden">
+            <div style="max-width: 700px; margin: 0 auto;">
+              <!-- Meal Weight Settings Card -->
+              <div class="panel-card" style="margin-bottom: 1.25rem;">
+                <div class="panel-header">
+                  <h3 class="panel-title"><i class="ri-settings-3-line"></i> Meal Count Weight Settings</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.875rem;">
+                  Configure how much each meal time counts towards the total meal calculation. For example, if Breakfast is set to <strong>0.5</strong>, selecting 1 Breakfast will calculate as 0.5 meals.
+                </p>
+                <form id="meal-weights-form">
+                  <div class="quick-meal-grid">
+                    <div class="form-group">
+                      <label for="weight-breakfast">Breakfast Multiplier</label>
+                      <input type="number" step="0.1" min="0" id="weight-breakfast" class="form-control" value="0.5" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="weight-lunch">Lunch Multiplier</label>
+                      <input type="number" step="0.1" min="0" id="weight-lunch" class="form-control" value="1.0" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="weight-dinner">Dinner Multiplier</label>
+                      <input type="number" step="0.1" min="0" id="weight-dinner" class="form-control" value="1.0" required>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary"><i class="ri-save-line"></i> Save Meal Settings</button>
+                </form>
+              </div>
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="panel-title"><i class="ri-download-cloud-line"></i> Data Backup (Export JSON)</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                  Export all mess members, meal records, expense receipts, and payment transactions into a backup JSON file.
+                </p>
+                <button class="btn btn-primary" id="btn-backup-export">
+                  <i class="ri-file-download-line"></i> Export Backup File (.json)
+                </button>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="panel-title"><i class="ri-upload-cloud-line"></i> Restore Data from Backup</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                  Upload a previously exported JSON backup file to restore system state. Existing data will be validated before replacing.
+                </p>
+                <div class="form-group">
+                  <input type="file" id="restore-file-input" class="form-control" accept=".json">
+                </div>
+                <button class="btn btn-secondary" id="btn-backup-restore">
+                  <i class="ri-history-line"></i> Restore Backup Data
+                </button>
+              </div>
+
+              <div class="panel-card" style="border-color: var(--danger-light);">
+                <div class="panel-header">
+                  <h3 class="panel-title" style="color: var(--danger);"><i class="ri-error-warning-line"></i> Reset Application Data</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                  Wipe all system records, users, meals, expenses, and payments from LocalStorage. This action cannot be undone.
+                </p>
+                <button class="btn btn-danger" id="btn-reset-app-data">
+                  <i class="ri-delete-bin-line"></i> Reset Everything
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: SUPER ADMIN PANEL -->
+          <section id="view-superadmin" class="view-section hidden">
+            <!-- Super Admin KPI Summary -->
+            <div class="kpi-grid" id="superadmin-kpi-container">
+              <!-- Dynamically populated via JS -->
+            </div>
+
+            <!-- Mess Management Console -->
+            <div class="panel-card" style="margin-bottom: 1.25rem;">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title"><i class="ri-store-3-line text-indigo"></i> <span data-i18n="superadmin_mess_console">Super Admin Mess Management Console</span></h3>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                    Create and manage all messes. Each mess admin manages their own members, meals, and expenses independently.
+                  </p>
+                </div>
+                <button class="btn btn-primary" id="btn-open-create-mess-modal">
+                  <i class="ri-add-line"></i> <span data-i18n="create_new_mess">Create New Mess</span>
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Mess Name & Code</th>
+                      <th>Mess Admin</th>
+                      <th>Admin Phone</th>
+                      <th>Total Members</th>
+                      <th>Created Date</th>
+                      <th>Status</th>
+                      <th style="text-align: center;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="superadmin-messes-table-body">
+                    <!-- Dynamic Mess Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODALS & DIALOG OVERLAYS
+       ========================================================================== -->
+
+  <!-- CREATE / EDIT MESS MODAL (SUPER ADMIN ONLY) -->
+  <div class="modal-overlay" id="create-mess-modal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="create-mess-modal-title"><i class="ri-store-add-line text-indigo"></i> Create New Mess</h3>
+        <button type="button" class="modal-close-btn close-modal" id="close-create-mess-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="create-mess-form">
+        <div class="modal-body">
+          <input type="hidden" id="mess-id-input">
+          <div class="form-group">
+            <label for="mess-form-name">Mess Name</label>
+            <input type="text" id="mess-form-name" class="form-control" placeholder="e.g. Green Valley Mess" required>
+          </div>
+          <div class="form-group">
+            <label for="mess-form-code">Mess Code / ID</label>
+            <input type="text" id="mess-form-code" class="form-control" placeholder="e.g. GREEN-01" required>
+          </div>
+          <div class="form-group">
+            <label for="mess-form-address">Address / Location</label>
+            <input type="text" id="mess-form-address" class="form-control" placeholder="e.g. House 12, Road 4, Dhanmondi">
+          </div>
+
+          <div style="border-top: 1px dashed var(--border-color); margin: 1.25rem 0 1rem 0; padding-top: 1rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+              <i class="ri-user-star-line text-indigo"></i> Mess Admin Credentials
+            </h4>
+            <div class="form-group">
+              <label for="mess-admin-name">Mess Admin Name</label>
+              <input type="text" id="mess-admin-name" class="form-control" placeholder="e.g. Rahim Ahmed" required>
+            </div>
+            <div class="form-group">
+              <label for="mess-admin-phone">Mess Admin Phone</label>
+              <input type="tel" id="mess-admin-phone" class="form-control" placeholder="e.g. 01711223344" required>
+            </div>
+            <div class="form-group">
+              <label for="mess-admin-password">Initial Password</label>
+              <div class="password-input-wrapper">
+                <input type="password" id="mess-admin-password" class="form-control" value="123456" required>
+                <i class="ri-eye-line password-toggle-icon" data-target="mess-admin-password" title="Toggle password visibility"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal" id="btn-cancel-create-mess">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-create-mess"><i class="ri-check-line"></i> Save Mess Details</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MEAL ENTRY MODAL -->
+  <div class="modal-overlay" id="meal-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="meal-modal-title"><i class="ri-restaurant-2-line"></i> Record Meal Entry</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="meal-form">
+        <div class="modal-body">
+          <input type="hidden" id="meal-id">
+          
+          <!-- Member & Date Grid -->
+          <div class="form-row-2col">
+            <div class="form-group" id="meal-member-select-group">
+              <label for="meal-user-id"><i class="ri-user-line"></i> Member</label>
+              <select id="meal-user-id" class="form-control" required></select>
+            </div>
+            <div class="form-group">
+              <label for="meal-date"><i class="ri-calendar-line"></i> Date</label>
+              <input type="date" id="meal-date" class="form-control" required>
+            </div>
+          </div>
+
+          <!-- Quick Meal Presets Row -->
+          <div class="form-group">
+            <label class="form-label-sm"><i class="ri-flashlight-line"></i> Quick Preset Selection</label>
+            <div class="quick-presets-row">
+              <button type="button" class="preset-chip" id="preset-breakfast"><i class="ri-sun-line"></i> Breakfast (+1)</button>
+              <button type="button" class="preset-chip" id="preset-lunch"><i class="ri-restaurant-line"></i> Lunch (+1)</button>
+              <button type="button" class="preset-chip" id="preset-dinner"><i class="ri-moon-clear-line"></i> Dinner (+1)</button>
+              <button type="button" class="preset-chip" id="preset-full"><i class="ri-check-double-line"></i> Full Day</button>
+              <button type="button" class="preset-chip preset-chip-danger" id="preset-clear"><i class="ri-close-circle-line"></i> Clear</button>
+            </div>
+          </div>
+
+          <!-- Toggle Mode Selection -->
+          <div class="form-group">
+            <label class="form-label-sm"><i class="ri-time-line"></i> Meal Duration Mode</label>
+            <div class="segmented-control">
+              <label class="segmented-chip">
+                <input type="radio" name="meal-mode" value="onetime" id="mode-onetime" checked>
+                <span><i class="ri-calendar-event-line"></i> One-time Only</span>
+              </label>
+              <label class="segmented-chip">
+                <input type="radio" name="meal-mode" value="recurring" id="mode-recurring">
+                <span><i class="ri-repeat-line"></i> Continuous</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Integer Meal Count Inputs -->
+          <div class="quick-meal-grid">
+            <div class="form-group">
+              <label for="meal-breakfast" class="meal-label-icon"><i class="ri-sun-fill text-amber"></i> Breakfast</label>
+              <select id="meal-breakfast" class="form-control">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="meal-lunch" class="meal-label-icon"><i class="ri-sun-cloudy-fill text-blue"></i> Lunch</label>
+              <select id="meal-lunch" class="form-control">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="meal-dinner" class="meal-label-icon"><i class="ri-moon-fill text-indigo"></i> Dinner</label>
+              <select id="meal-dinner" class="form-control">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Calculated Summary Box -->
+          <div class="meal-summary-box">
+            <div class="meal-summary-main">
+              <span class="meal-summary-label">Total Calculated Meals:</span>
+              <div class="meal-summary-value">
+                <input type="number" id="meal-total" readonly value="0" tabindex="-1">
+                <span>meals</span>
+              </div>
+            </div>
+            <div class="meal-summary-sub" id="meal-weight-preview-text">
+              * (0×0.5) + (0×1.0) + (0×1.0) = 0.00 meals
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="meal-note"><i class="ri-edit-2-line"></i> Note / Remark (Optional)</label>
+            <input type="text" id="meal-note" class="form-control" placeholder="e.g. Guest meal included">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-save-3-line"></i> Save Meal Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EXPENSE MODAL -->
+  <div class="modal-overlay" id="expense-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="expense-modal-title">Record Mess Expense</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="expense-form">
+        <div class="modal-body">
+          <input type="hidden" id="expense-id">
+          
+          <div class="form-group">
+            <label for="expense-user-id">Spent / Paid By Member</label>
+            <select id="expense-user-id" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-date">Date</label>
+            <input type="date" id="expense-date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-amount">Amount (৳ Taka)</label>
+            <input type="number" step="0.01" min="0" id="expense-amount" class="form-control" placeholder="0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-category">Expense Category</label>
+            <select id="expense-category" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-description">Description / Receipt Details</label>
+            <input type="text" id="expense-description" class="form-control" placeholder="e.g., Fish & Vegetables from Bazar" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div class="modal-overlay" id="payment-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="payment-modal-title">Record Member Payment</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="payment-form">
+        <div class="modal-body">
+          <input type="hidden" id="payment-id">
+
+          <div class="form-group">
+            <label for="payment-user-id">Member</label>
+            <select id="payment-user-id" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="payment-date">Date</label>
+            <input type="date" id="payment-date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="payment-amount">Amount Paid (৳ Taka)</label>
+            <input type="number" step="0.01" min="0" id="payment-amount" class="form-control" placeholder="0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label for="payment-note">Note / Receipt Ref (Optional)</label>
+            <input type="text" id="payment-note" class="form-control" placeholder="e.g., bKash Cash In / Cash">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Record Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MEMBER MODAL (ADMIN) -->
+  <div class="modal-overlay" id="member-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="member-modal-title">Add New Mess Member</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="member-form">
+        <div class="modal-body">
+          <input type="hidden" id="member-id">
+
+          <div class="form-group">
+            <label for="member-name">Full Name</label>
+            <input type="text" id="member-name" class="form-control" placeholder="Member Name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="member-phone">Phone Number</label>
+            <input type="tel" id="member-phone" class="form-control" placeholder="017XXXXXXXX" required>
+          </div>
+
+          <div class="form-group" id="member-password-group">
+            <label for="member-password">Initial Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="member-password" class="form-control" placeholder="Set password">
+              <i class="ri-eye-line password-toggle-icon" data-target="member-password" title="Toggle password visibility"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="member-role">System Role</label>
+            <select id="member-role" class="form-control">
+              <option value="member">Member</option>
+              <option value="manager">Meal Manager</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Superadmin</option>
+            </select>
+          </div>
+
+          <div class="form-group superadmin-only hidden" id="member-manager-group">
+            <label for="member-manager-id">Assigned Manager / Mess</label>
+            <select id="member-manager-id" class="form-control"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ELECT MEAL MANAGER MODAL -->
+  <div class="modal-overlay" id="elect-manager-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-user-star-line"></i> Elect Meal Manager by Date</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="elect-manager-form">
+        <div class="modal-body">
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Elect a member as <strong>Meal Manager</strong> for a specific date range (e.g., 01/07/2026 to 16/07/2026). The elected Manager will hold management permissions during that period.
+          </p>
+
+          <div class="form-group">
+            <label for="elect-user-id">Select Active Member</label>
+            <select id="elect-user-id" class="form-control" required></select>
+          </div>
+
+          <label class="form-group" style="margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
+            Quick Term Presets
+          </label>
+          <div class="quick-presets-row" style="margin-bottom: 1rem;">
+            <button type="button" class="preset-chip" id="preset-term-first-half"><i class="ri-calendar-event-line"></i> 1st Half (1st-15th)</button>
+            <button type="button" class="preset-chip" id="preset-term-second-half"><i class="ri-calendar-2-line"></i> 2nd Half (16th-End)</button>
+            <button type="button" class="preset-chip" id="preset-term-full-month"><i class="ri-calendar-check-line"></i> Full Month</button>
+          </div>
+
+          <div class="quick-meal-grid" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label for="elect-start-date">Start Date</label>
+              <input type="date" id="elect-start-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="elect-end-date">End Date</label>
+              <input type="date" id="elect-end-date" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="elect-note">Duty Note / Designation (Optional)</label>
+            <input type="text" id="elect-note" class="form-control" placeholder="e.g., 1st Half Meal Manager">
+          </div>
+
+          <!-- COOK BILL SECTION -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem;">
+              <input type="checkbox" id="elect-include-cook-bill" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);">
+              <label for="elect-include-cook-bill" style="font-weight: 600; font-size: 0.9rem; cursor: pointer; color: var(--text-primary); margin: 0;">
+                <i class="ri-restaurant-line" style="color: var(--warning);"></i> Include Cook Bill for this term
+              </label>
+            </div>
+            <div id="cook-bill-fields" style="display: none;">
+              <div class="quick-meal-grid" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label for="elect-cook-bill-amount">Amount per Member (৳)</label>
+                  <input type="number" id="elect-cook-bill-amount" class="form-control" placeholder="e.g. 500" min="0" step="1">
+                </div>
+                <div class="form-group">
+                  <label for="elect-cook-bill-note">Cook Bill Note (Optional)</label>
+                  <input type="text" id="elect-cook-bill-note" class="form-control" placeholder="e.g. Monthly Cook Fee">
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                <i class="ri-information-line"></i> Same amount will be applied to all active members. You can adjust individual amounts afterward.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-check-line"></i> Confirm Election</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT MANAGER TERM MODAL -->
+  <div class="modal-overlay" id="edit-manager-term-modal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-edit-line"></i> Edit Manager Term</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="edit-manager-term-form">
+        <div class="modal-body">
+          <input type="hidden" id="edit-term-id">
+
+          <!-- Manager Info (readonly) -->
+          <div class="form-group" style="margin-bottom: 0.65rem;">
+            <label style="font-size: 0.8rem; color: var(--text-secondary);">Manager</label>
+            <div id="edit-term-manager-name" style="font-size: 0.95rem; font-weight: 700; padding: 0.4rem 0;"></div>
+          </div>
+
+          <!-- Date Range -->
+          <div class="quick-meal-grid" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label for="edit-term-start-date">Start Date</label>
+              <input type="date" id="edit-term-start-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-term-end-date">End Date</label>
+              <input type="date" id="edit-term-end-date" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-term-note">Duty Note</label>
+            <input type="text" id="edit-term-note" class="form-control" placeholder="e.g. 1st Half Meal Manager">
+          </div>
+
+          <!-- Cook Bill Section -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.25rem;">
+            <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">
+              <i class="ri-restaurant-line" style="color: var(--warning);"></i> Cook Bill (linked to this term)
+            </div>
+            <div id="edit-term-cook-bill-section">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-check-line"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADJUST COOK BILL MODAL -->
+  <div class="modal-overlay" id="adjust-cook-bill-modal">
+    <div class="modal-container" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-restaurant-line"></i> Adjust Cook Bill per Member</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="adjust-cook-bill-id">
+        <p id="adjust-cook-bill-info" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;"></p>
+        <div id="adjust-cook-bill-member-list">
+          <!-- Dynamic per-member rows -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-cook-bill-adjustments"><i class="ri-check-line"></i> Save Adjustments</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD COOK BILL MODAL (standalone, not tied to manager election) -->
+  <div class="modal-overlay" id="add-cook-bill-modal">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-restaurant-line"></i> Add Cook Bill</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="add-cook-bill-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="add-cook-bill-term">Link to Manager Term (Optional)</label>
+            <select id="add-cook-bill-term" class="form-control">
+              <option value="">— Not linked to any term —</option>
+            </select>
+          </div>
+          <div class="quick-meal-grid" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label for="add-cook-bill-amount">Amount per Member (৳)</label>
+              <input type="number" id="add-cook-bill-amount" class="form-control" placeholder="e.g. 500" min="0" step="1" required>
+            </div>
+            <div class="form-group">
+              <label for="add-cook-bill-month">Month</label>
+              <input type="month" id="add-cook-bill-month" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="add-cook-bill-note">Note (Optional)</label>
+            <input type="text" id="add-cook-bill-note" class="form-control" placeholder="e.g. Monthly Cook Fee - July">
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);"><i class="ri-information-line"></i> Same amount will be charged to all active members. You can adjust individually afterward.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-check-line"></i> Add Cook Bill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MEAL SETTINGS MODAL -->
+  <div class="modal-overlay" id="meal-settings-modal">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-settings-3-line"></i> <span data-i18n="meal_settings">Meal Settings</span></h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="meal-settings-form">
+        <div class="modal-body">
+          <input type="hidden" id="settings-member-id">
+          
+          <div style="background: var(--bg-primary); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; border: 1px solid var(--border-color);">
+            <div style="font-weight: 700; font-size: 1.05rem;" id="settings-member-name">Member Name</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);" id="settings-date">Date</div>
+          </div>
+
+          <!-- Quantity Section -->
+          <div style="margin-bottom: 1.25rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;"><i class="ri-bowl-line text-indigo"></i> Default Meal Quantities</h4>
+            <div class="quick-meal-grid">
+              <div class="form-group">
+                <label for="settings-bf-qty">Breakfast</label>
+                <input type="number" min="0" max="10" id="settings-bf-qty" class="form-control" value="1" required>
+              </div>
+              <div class="form-group">
+                <label for="settings-lunch-qty">Lunch</label>
+                <input type="number" min="0" max="10" id="settings-lunch-qty" class="form-control" value="1" required>
+              </div>
+              <div class="form-group">
+                <label for="settings-dinner-qty">Dinner</label>
+                <input type="number" min="0" max="10" id="settings-dinner-qty" class="form-control" value="1" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Section -->
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;"><i class="ri-toggle-line text-emerald"></i> Meal Status Rules</h4>
+            
+            <!-- Breakfast Status -->
+            <div class="status-setting-group" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+              <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); display: block; margin-bottom: 0.5rem;">Breakfast:</label>
+              <div class="segmented-control" style="grid-template-columns: repeat(2, 1fr); gap: 0.35rem;">
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-bf-status" value="on_daily" checked>
+                  <span><i class="ri-check-line text-emerald"></i> Continuous ON</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-bf-status" value="on_once">
+                  <span><i class="ri-time-line text-blue"></i> ON Once</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-bf-status" value="off_daily">
+                  <span><i class="ri-close-line text-rose"></i> Continuous OFF</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-bf-status" value="off_once">
+                  <span><i class="ri-close-circle-line text-amber"></i> OFF Once</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Lunch Status -->
+            <div class="status-setting-group" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+              <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); display: block; margin-bottom: 0.5rem;">Lunch:</label>
+              <div class="segmented-control" style="grid-template-columns: repeat(2, 1fr); gap: 0.35rem;">
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-lunch-status" value="on_daily" checked>
+                  <span><i class="ri-check-line text-emerald"></i> Continuous ON</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-lunch-status" value="on_once">
+                  <span><i class="ri-time-line text-blue"></i> ON Once</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-lunch-status" value="off_daily">
+                  <span><i class="ri-close-line text-rose"></i> Continuous OFF</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-lunch-status" value="off_once">
+                  <span><i class="ri-close-circle-line text-amber"></i> OFF Once</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Dinner Status -->
+            <div class="status-setting-group" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+              <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); display: block; margin-bottom: 0.5rem;">Dinner:</label>
+              <div class="segmented-control" style="grid-template-columns: repeat(2, 1fr); gap: 0.35rem;">
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-dinner-status" value="on_daily" checked>
+                  <span><i class="ri-check-line text-emerald"></i> Continuous ON</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-dinner-status" value="on_once">
+                  <span><i class="ri-time-line text-blue"></i> ON Once</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-dinner-status" value="off_daily">
+                  <span><i class="ri-close-line text-rose"></i> Continuous OFF</span>
+                </label>
+                <label class="segmented-chip">
+                  <input type="radio" name="settings-dinner-status" value="off_once">
+                  <span><i class="ri-close-circle-line text-amber"></i> OFF Once</span>
+                </label>
+              </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); background: var(--bg-primary); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);">
+              📌 <strong>Note:</strong> "Once" applies only to the selected date. "Continuous" applies from this date onwards until changed.
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-save-3-line"></i> Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GENERIC CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="confirm-modal-title">Confirm Action</h3>
+        <button type="button" class="modal-close-btn close-modal"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="confirm-btn-cancel">Cancel</button>
+        <button class="btn btn-danger" id="confirm-btn-ok">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>

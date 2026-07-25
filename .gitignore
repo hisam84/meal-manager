@@ -1,0 +1,7 @@
+node_modules
+.env
+.vercel
+patch.js
+patch.py
+
+.vercel
