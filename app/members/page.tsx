@@ -218,7 +218,8 @@ export default function MembersPage() {
   }
 
   return (
-    <PageShell user={user} onLogout={handleLogout} title="মেম্বার ও ম্যানেজার নির্বাচন">
+    <>
+      <PageShell user={user} onLogout={handleLogout} title="মেম্বার ও ম্যানেজার নির্বাচন">
           {message && (
             <div
               className={`p-4 rounded-xl text-sm flex items-center gap-2 ${
@@ -507,8 +508,7 @@ export default function MembersPage() {
               </table>
             </div>
           </div>
-        </main>
-      </div>
+      </PageShell>
 
       {/* Password Reset Modal */}
       {resetModalUser && (
@@ -551,6 +551,6 @@ export default function MembersPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
