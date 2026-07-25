@@ -76,6 +76,21 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
     },
   });
 
+  // Get cook bill for the month if exists
+  const cookBill = await prisma.cookBill.findFirst({
+    where: { messId, month },
+  });
+
+  const totalCookBill = cookBill ? cookBill.totalAmount : 0;
+  let parsedMemberCookBills: Record<string, number> = {};
+  if (cookBill && cookBill.memberBills) {
+    try {
+      parsedMemberCookBills = JSON.parse(cookBill.memberBills);
+    } catch (e) {
+      parsedMemberCookBills = {};
+    }
+  }
+
   // Aggregations
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalMeals = meals.reduce((sum, m) => sum + m.total, 0);
@@ -94,9 +109,10 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
     const userTotalMeals = userMeals.reduce((sum, m) => sum + m.total, 0);
 
     const mealCost = userTotalMeals * mealRate;
+    const cookBillAmount = parsedMemberCookBills[user.id] || (users.length > 0 ? Number((totalCookBill / users.length).toFixed(2)) : 0);
     const userPayments = payments.filter((p) => p.userId === user.id);
     const paid = userPayments.reduce((sum, p) => sum + p.amount, 0);
-    const balance = paid - mealCost;
+    const balance = paid - (mealCost + cookBillAmount);
 
     let status: 'Receivable' | 'Payable' | 'Settled' = 'Settled';
     if (balance > 0.01) {
@@ -117,6 +133,7 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
       dinner: dCount,
       totalMeals: userTotalMeals,
       mealCost: Number(mealCost.toFixed(2)),
+      cookBill: Number(cookBillAmount.toFixed(2)),
       paid: Number(paid.toFixed(2)),
       balance: Number(balance.toFixed(2)),
       status,
@@ -128,6 +145,7 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
     totalMembers: users.length,
     totalMeals: Number(totalMeals.toFixed(2)),
     totalExpenses: Number(totalExpenses.toFixed(2)),
+    totalCookBill: Number(totalCookBill.toFixed(2)),
     mealRate: Number(mealRate.toFixed(2)),
     totalPayments: Number(totalPayments.toFixed(2)),
     totalReceivable: Number(totalReceivable.toFixed(2)),

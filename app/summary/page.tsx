@@ -144,6 +144,7 @@ export default function SummaryPage() {
                     <th className="px-4 py-3">রাত</th>
                     <th className="px-4 py-3 font-semibold">মোট মিল</th>
                     <th className="px-4 py-3">মিল খরচ (৳)</th>
+                    <th className="px-4 py-3">বুয়ার বিল (৳)</th>
                     <th className="px-4 py-3">মোট জমা (৳)</th>
                     <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
                     <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>
@@ -159,6 +160,7 @@ export default function SummaryPage() {
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.dinner}</td>
                       <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{m.totalMeals}</td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
+                      <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
                       <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
                       <td className={`px-4 py-3 font-extrabold ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         ৳{m.balance}
