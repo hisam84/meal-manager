@@ -8,8 +8,9 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 
-// Prefix all routes with /api
+// Prefix all routes with /api (and / fallback for Vercel rewrites)
 app.use('/api', routes);
+app.use('/', routes);
 
 // Base route for health check
 app.get('/api', (req, res) => {
