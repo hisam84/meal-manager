@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       include: {
         user: { select: { id: true, name: true, phone: true, role: true } },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' },
     });
 
     return NextResponse.json(meals);
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, date, breakfast = 0, lunch = 0, dinner = 0, note = '' } = body;
+    const { userId, date, breakfast = 0, lunch = 0, dinner = 0, note = '', mode = 'ON_ONCE' } = body;
 
     const targetUserId = userId || currentUser.id;
 
@@ -82,34 +82,53 @@ export async function POST(req: Request) {
 
     const total = (b * bw) + (l * lw) + (d * dw);
 
-    // Upsert meal for target user and date
-    const meal = await prisma.meal.upsert({
-      where: {
-        userId_date: {
-          userId: targetUserId,
-          date,
-        },
-      },
-      update: {
-        breakfast: b,
-        lunch: l,
-        dinner: d,
-        total,
-        note,
-      },
-      create: {
-        userId: targetUserId,
-        messId: currentUser.messId,
-        date,
-        breakfast: b,
-        lunch: l,
-        dinner: d,
-        total,
-        note,
-      },
-    });
+    // Determine target dates for single day vs continuous daily modes
+    const targetDates: string[] = [date];
 
-    return NextResponse.json({ success: true, meal });
+    if (mode === 'ON_DAILY' || mode === 'OFF_DAILY') {
+      const startDate = new Date(date);
+      const year = startDate.getFullYear();
+      const month = startDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const currentDay = startDate.getDate();
+
+      for (let day = currentDay + 1; day <= daysInMonth; day++) {
+        const dayStr = day < 10 ? `0${day}` : `${day}`;
+        const monthStr = (month + 1) < 10 ? `0${month + 1}` : `${month + 1}`;
+        targetDates.push(`${year}-${monthStr}-${dayStr}`);
+      }
+    }
+
+    // Upsert meals for all target dates
+    for (const targetDate of targetDates) {
+      await prisma.meal.upsert({
+        where: {
+          userId_date: {
+            userId: targetUserId,
+            date: targetDate,
+          },
+        },
+        update: {
+          breakfast: b,
+          lunch: l,
+          dinner: d,
+          total,
+          note,
+        },
+        create: {
+          userId: targetUserId,
+          messId: currentUser.messId,
+          date: targetDate,
+          breakfast: b,
+          lunch: l,
+          dinner: d,
+          total,
+          note,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, count: targetDates.length });
   } catch (error: any) {
     console.error('Save meal error:', error);
     return NextResponse.json({ error: 'Failed to save meal entry' }, { status: 500 });
