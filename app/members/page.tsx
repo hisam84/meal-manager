@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import PageShell from '@/components/PageShell';
 import { Users, UserPlus, KeyRound, UserCheck, UserX, Trash2, CheckCircle2, AlertCircle, Calendar, ShieldAlert } from 'lucide-react';
 
 export default function MembersPage() {
@@ -219,13 +218,7 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Sidebar user={user} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="মেম্বার ও ম্যানেজার নির্বাচন" />
-
-        <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <PageShell user={user} onLogout={handleLogout} title="মেম্বার ও ম্যানেজার নির্বাচন">
           {message && (
             <div
               className={`p-4 rounded-xl text-sm flex items-center gap-2 ${

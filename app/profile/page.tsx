@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import PageShell from '@/components/PageShell';
 import { User, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -85,13 +84,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Sidebar user={user} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="মাই প্রোফাইল" />
-
-        <main className="p-6 space-y-6 max-w-4xl mx-auto w-full">
+    <PageShell user={user} onLogout={handleLogout} title="মাই প্রোফাইল">
           {/* Profile Overview Card */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center gap-4">
@@ -166,8 +159,6 @@ export default function ProfilePage() {
               </button>
             </form>
           </div>
-        </main>
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -16,15 +16,18 @@ import {
   Moon,
   Sun,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface SidebarProps {
   user: any;
   onLogout: () => void;
+  mobileOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ user, onLogout }: SidebarProps) {
+export default function Sidebar({ user, onLogout, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [darkMode, setDarkMode] = useState(false);
 
@@ -72,26 +75,36 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
   const navItems = isSuperAdmin ? superAdminNavItems : standardNavItems;
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
-  return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between min-h-screen transition-colors">
+  const sidebarContent = (
+    <>
       <div>
         {/* Brand Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-sky-500/20">
-            ম
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-sky-500/20">
+              ম
+            </div>
+            <div>
+              <h1 className="font-bold text-slate-900 dark:text-white text-base leading-tight">মেস মিল ট্র্যাকার</h1>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {isSuperAdmin ? 'Super Admin Console' : 'PostgreSQL & Next.js'}
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-slate-900 dark:text-white text-base leading-tight">মেস মিল ট্র্যাকার</h1>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {isSuperAdmin ? 'Super Admin Console' : 'PostgreSQL & Next.js'}
-            </span>
-          </div>
+
+          {/* Close button for mobile */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* User Card */}
         {user && (
           <div className="p-4 mx-3 my-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-semibold flex items-center justify-center text-sm">
+            <div className="w-9 h-9 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-semibold flex items-center justify-center text-sm shrink-0">
               {user.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="overflow-hidden">
@@ -115,6 +128,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
@@ -149,6 +163,25 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
           <span>লগআউট</span>
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between min-h-screen transition-colors shrink-0">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 flex flex-col justify-between shadow-2xl animate-slide-in overflow-y-auto">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

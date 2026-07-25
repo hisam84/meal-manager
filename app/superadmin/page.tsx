@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import PageShell from '@/components/PageShell';
 import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function SuperAdminPage() {
@@ -99,13 +98,7 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Sidebar user={user} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="সুপার এডমিন মেস কন্সোল" />
-
-        <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <PageShell user={user} onLogout={handleLogout} title="সুপার এডমিন মেস কন্সোল">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-900 via-sky-900 to-slate-900 text-white p-6 rounded-2xl shadow-lg space-y-2">
             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -275,8 +268,6 @@ export default function SuperAdminPage() {
               })}
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </PageShell>
   );
 }

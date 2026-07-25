@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import PageShell from '@/components/PageShell';
 import { Receipt, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const CATEGORIES = [
@@ -122,13 +121,7 @@ export default function ExpensesPage() {
   const totalExpensesAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Sidebar user={user} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="মেস খরচ ব্যবস্থাপনা" />
-
-        <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <PageShell user={user} onLogout={handleLogout} title="মেস খরচ ব্যবস্থাপনা">
           {/* Add Expense Form (Admin & Manager Only) */}
           {isAdminOrManager && (
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
@@ -313,8 +306,6 @@ export default function ExpensesPage() {
               </table>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </PageShell>
   );
 }

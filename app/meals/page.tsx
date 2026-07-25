@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import PageShell from '@/components/PageShell';
 import { Utensils, CheckCircle2, AlertCircle, Calendar, RefreshCw, X, Clock, Lock, Info } from 'lucide-react';
 
 export default function MealsPage() {
@@ -195,13 +194,8 @@ export default function MealsPage() {
   const modalCalculatedTotal = (bVal * bw) + (lVal * lw) + (dVal * dw);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Sidebar user={user} onLogout={handleLogout} />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="দৈনিক মিল চার্ট ও বেলা-ভিত্তিক সেটিংস" />
-
-        <main className="p-6 space-y-6 max-w-full mx-auto w-full">
+    <>
+    <PageShell user={user} onLogout={handleLogout} title="দৈনিক মিল চার্ট ও বেলা-ভিত্তিক সেটিংস">
           {/* Header Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <div>
@@ -340,8 +334,7 @@ export default function MealsPage() {
               </table>
             </div>
           </div>
-        </main>
-      </div>
+    </PageShell>
 
       {/* Excel Sheet Per-Meal Time Config Modal (Admin & Manager Only) */}
       {selectedCell && isAdminOrManager && (
@@ -615,6 +608,6 @@ export default function MealsPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
