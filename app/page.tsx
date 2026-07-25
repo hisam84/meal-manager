@@ -30,6 +30,8 @@ export default function DashboardPage() {
       .then((data) => {
         if (!data.authenticated) {
           router.push('/login');
+        } else if (data.user.role === 'SUPERADMIN') {
+          router.push('/superadmin');
         } else {
           setUser(data.user);
           loadSummary(month);

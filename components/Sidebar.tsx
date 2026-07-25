@@ -15,6 +15,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  ShieldCheck,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -49,7 +50,14 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
     }
   };
 
-  const navItems = [
+  const isSuperAdmin = user?.role === 'SUPERADMIN';
+
+  const superAdminNavItems = [
+    { href: '/superadmin', label: 'সুপার এডমিন (নতুন মেস যোগ)', icon: ShieldCheck },
+    { href: '/profile', label: 'মাই প্রোফাইল', icon: User },
+  ];
+
+  const standardNavItems = [
     { href: '/', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
     { href: '/meals', label: 'মিল হিসাব', icon: UtensilsCrossed },
     { href: '/expenses', label: 'মেস খরচ', icon: Receipt },
@@ -61,7 +69,8 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
     { href: '/profile', label: 'মাই প্রোফাইল', icon: User },
   ];
 
-  const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const navItems = isSuperAdmin ? superAdminNavItems : standardNavItems;
+  const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   return (
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between min-h-screen transition-colors">
@@ -73,19 +82,21 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
           </div>
           <div>
             <h1 className="font-bold text-slate-900 dark:text-white text-base leading-tight">মেস মিল ট্র্যাকার</h1>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">PostgreSQL & Next.js</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {isSuperAdmin ? 'Super Admin Console' : 'PostgreSQL & Next.js'}
+            </span>
           </div>
         </div>
 
         {/* User Card */}
         {user && (
           <div className="p-4 mx-3 my-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 font-semibold flex items-center justify-center text-sm">
+            <div className="w-9 h-9 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-semibold flex items-center justify-center text-sm">
               {user.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="overflow-hidden">
               <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{user.name}</p>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 inline-block">
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 inline-block">
                 {user.role}
               </span>
             </div>
@@ -94,7 +105,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
+          {navItems.map((item: any) => {
             if (item.adminOnly && !isAdminOrManager) return null;
 
             const isActive = pathname === item.href;

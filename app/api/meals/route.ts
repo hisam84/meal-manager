@@ -2,22 +2,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
-async function getTargetMessId(user: any): Promise<string | null> {
-  if (user?.messId) return user.messId;
-  const mess = await prisma.mess.findFirst();
-  return mess?.id || null;
-}
-
 export async function GET(req: Request) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser) {
+    if (!currentUser || !currentUser.messId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const messId = await getTargetMessId(currentUser);
-    if (!messId) {
-      return NextResponse.json([]);
     }
 
     const { searchParams } = new URL(req.url);
@@ -25,7 +14,7 @@ export async function GET(req: Request) {
     const date = searchParams.get('date');
     const userId = searchParams.get('userId');
 
-    const where: any = { messId };
+    const where: any = { messId: currentUser.messId };
 
     if (month) {
       where.date = { startsWith: month };
@@ -37,6 +26,7 @@ export async function GET(req: Request) {
       where.userId = userId;
     }
 
+    // Standard members only see their own meals if filtering by member or unless viewing mess list
     if (currentUser.role === 'MEMBER' && userId && userId !== currentUser.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -59,13 +49,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser) {
+    if (!currentUser || !currentUser.messId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const messId = await getTargetMessId(currentUser);
-    if (!messId) {
-      return NextResponse.json({ error: 'No active mess found' }, { status: 404 });
     }
 
     const body = await req.json();
@@ -73,6 +58,7 @@ export async function POST(req: Request) {
 
     const targetUserId = userId || currentUser.id;
 
+    // Permissions check
     if (currentUser.role === 'MEMBER' && targetUserId !== currentUser.id) {
       return NextResponse.json({ error: 'Members can only manage their own meals' }, { status: 403 });
     }
@@ -85,8 +71,9 @@ export async function POST(req: Request) {
     const l = Math.max(0, Number(lunch) || 0);
     const d = Math.max(0, Number(dinner) || 0);
 
+    // Get mess weights
     const settings = await prisma.messSetting.findUnique({
-      where: { messId },
+      where: { messId: currentUser.messId },
     });
 
     const bw = settings?.breakfastWeight ?? 1.0;
@@ -95,6 +82,7 @@ export async function POST(req: Request) {
 
     const total = (b * bw) + (l * lw) + (d * dw);
 
+    // Upsert meal for target user and date
     const meal = await prisma.meal.upsert({
       where: {
         userId_date: {
@@ -111,7 +99,7 @@ export async function POST(req: Request) {
       },
       create: {
         userId: targetUserId,
-        messId,
+        messId: currentUser.messId,
         date,
         breakfast: b,
         lunch: l,
@@ -131,7 +119,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser) {
+    if (!currentUser || !currentUser.messId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
