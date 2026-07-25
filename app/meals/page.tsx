@@ -25,13 +25,13 @@ export default function MealsPage() {
 
   // Per-meal time settings: Breakfast, Lunch, Dinner
   const [breakfastCount, setBreakfastCount] = useState(1);
-  const [breakfastMode, setBreakfastMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+  const [breakfastMode, setBreakfastMode] = useState<'DAILY' | 'ONCE' | 'OFF' | 'OFF_ONCE'>('ONCE');
 
   const [lunchCount, setLunchCount] = useState(1);
-  const [lunchMode, setLunchMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+  const [lunchMode, setLunchMode] = useState<'DAILY' | 'ONCE' | 'OFF' | 'OFF_ONCE'>('ONCE');
 
   const [dinnerCount, setDinnerCount] = useState(1);
-  const [dinnerMode, setDinnerMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+  const [dinnerMode, setDinnerMode] = useState<'DAILY' | 'ONCE' | 'OFF' | 'OFF_ONCE'>('ONCE');
 
   const [note, setNote] = useState('');
 
@@ -189,9 +189,9 @@ export default function MealsPage() {
   }
 
   // Calculate live preview count for modal
-  const bVal = breakfastMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
-  const lVal = lunchMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
-  const dVal = dinnerMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
+  const bVal = (breakfastMode === 'OFF' || breakfastMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
+  const lVal = (lunchMode === 'OFF' || lunchMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
+  const dVal = (dinnerMode === 'OFF' || dinnerMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
   const modalCalculatedTotal = (bVal * bw) + (lVal * lw) + (dVal * dw);
 
   return (
@@ -387,7 +387,7 @@ export default function MealsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="grid grid-cols-4 gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => setBreakfastMode('DAILY')}
@@ -416,6 +416,18 @@ export default function MealsPage() {
 
                   <button
                     type="button"
+                    onClick={() => setBreakfastMode('OFF_ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      breakfastMode === 'OFF_ONCE'
+                        ? 'bg-amber-600 border-amber-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>বন্ধ একদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setBreakfastMode('OFF')}
                     className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
                       breakfastMode === 'OFF'
@@ -423,7 +435,7 @@ export default function MealsPage() {
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span>বন্ধ</span>
+                    <span>বন্ধ প্রতিদিন</span>
                   </button>
                 </div>
               </div>
@@ -448,7 +460,7 @@ export default function MealsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="grid grid-cols-4 gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => setLunchMode('DAILY')}
@@ -477,6 +489,18 @@ export default function MealsPage() {
 
                   <button
                     type="button"
+                    onClick={() => setLunchMode('OFF_ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      lunchMode === 'OFF_ONCE'
+                        ? 'bg-amber-600 border-amber-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>বন্ধ একদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setLunchMode('OFF')}
                     className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
                       lunchMode === 'OFF'
@@ -484,7 +508,7 @@ export default function MealsPage() {
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span>বন্ধ</span>
+                    <span>বন্ধ প্রতিদিন</span>
                   </button>
                 </div>
               </div>
@@ -509,7 +533,7 @@ export default function MealsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="grid grid-cols-4 gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => setDinnerMode('DAILY')}
@@ -538,6 +562,18 @@ export default function MealsPage() {
 
                   <button
                     type="button"
+                    onClick={() => setDinnerMode('OFF_ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      dinnerMode === 'OFF_ONCE'
+                        ? 'bg-amber-600 border-amber-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>বন্ধ একদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setDinnerMode('OFF')}
                     className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
                       dinnerMode === 'OFF'
@@ -545,7 +581,7 @@ export default function MealsPage() {
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span>বন্ধ</span>
+                    <span>বন্ধ প্রতিদিন</span>
                   </button>
                 </div>
               </div>

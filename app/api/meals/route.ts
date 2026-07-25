@@ -86,9 +86,9 @@ export async function POST(req: Request) {
     const lw = settings?.lunchWeight ?? 1.0;
     const dw = settings?.dinnerWeight ?? 1.0;
 
-    const b = breakfastMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
-    const l = lunchMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
-    const d = dinnerMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
+    const b = (breakfastMode === 'OFF' || breakfastMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
+    const l = (lunchMode === 'OFF' || lunchMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
+    const d = (dinnerMode === 'OFF' || dinnerMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
 
     const totalD = (b * bw) + (l * lw) + (d * dw);
 
