@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Phone, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
@@ -40,7 +39,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 text-white">
-      <div className="w-full max-max-w-md max-w-md bg-white/10 backdrop-blur-xl border border-white/15 p-8 rounded-2xl shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/15 p-8 rounded-2xl shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <div className="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto shadow-lg shadow-sky-500/30">
             ম
@@ -101,11 +100,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="text-center text-sm text-slate-300">
-          একাউন্ট নেই?{' '}
-          <Link href="/register" className="text-sky-400 hover:underline font-semibold">
-            রেজিস্টার করুন
-          </Link>
+        <div className="text-center text-xs text-slate-400">
+          নতুন একাউন্টের জন্য মেস এডমিনের সাথে যোগাযোগ করুন
         </div>
       </div>
     </div>
