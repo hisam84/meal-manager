@@ -26,11 +26,6 @@ export async function GET(req: Request) {
       where.userId = userId;
     }
 
-    // Standard members only see their own meals if filtering by member or unless viewing mess list
-    if (currentUser.role === 'MEMBER' && userId && userId !== currentUser.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const meals = await prisma.meal.findMany({
       where,
       include: {
@@ -53,15 +48,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Role safeguard: Only ADMIN, MANAGER, SUPERADMIN can add or edit meals
+    if (currentUser.role === 'MEMBER') {
+      return NextResponse.json(
+        { error: 'Standard members cannot modify meals. Only Admins and Managers can manage meals.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { userId, date, breakfast = 0, lunch = 0, dinner = 0, note = '', mode = 'ON_ONCE' } = body;
 
     const targetUserId = userId || currentUser.id;
-
-    // Permissions check
-    if (currentUser.role === 'MEMBER' && targetUserId !== currentUser.id) {
-      return NextResponse.json({ error: 'Members can only manage their own meals' }, { status: 403 });
-    }
 
     if (!date) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
@@ -142,6 +140,14 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Role safeguard: Only ADMIN, MANAGER, SUPERADMIN can delete meals
+    if (currentUser.role === 'MEMBER') {
+      return NextResponse.json(
+        { error: 'Standard members cannot delete meals. Only Admins and Managers can manage meals.' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
@@ -152,10 +158,6 @@ export async function DELETE(req: Request) {
     const meal = await prisma.meal.findUnique({ where: { id } });
     if (!meal) {
       return NextResponse.json({ error: 'Meal record not found' }, { status: 404 });
-    }
-
-    if (currentUser.role === 'MEMBER' && meal.userId !== currentUser.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     await prisma.meal.delete({ where: { id } });

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { Utensils, CheckCircle2, AlertCircle, Calendar, RefreshCw, X, Layers, Clock } from 'lucide-react';
+import { Utensils, CheckCircle2, AlertCircle, Calendar, RefreshCw, X, Clock, Lock } from 'lucide-react';
 
 export default function MealsPage() {
   const router = useRouter();
@@ -81,6 +81,8 @@ export default function MealsPage() {
     router.push('/login');
   };
 
+  const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
+
   // Calculate days in month
   const [yearStr, monthStr] = month.split('-');
   const daysInMonth = new Date(Number(yearStr), Number(monthStr), 0).getDate();
@@ -88,6 +90,14 @@ export default function MealsPage() {
 
   // Cell click handler
   const handleOpenCellModal = (member: any, day: number) => {
+    if (!isAdminOrManager) {
+      setMessage({
+        type: 'error',
+        text: 'সাধারণ মেম্বারগণ মিল পরিবর্তন করতে পারবেন না। মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।',
+      });
+      return;
+    }
+
     const dayFormatted = day < 10 ? `0${day}` : `${day}`;
     const targetDate = `${month}-${dayFormatted}`;
 
@@ -110,7 +120,7 @@ export default function MealsPage() {
 
   const handleSaveMealEntry = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCell) return;
+    if (!selectedCell || !isAdminOrManager) return;
 
     setMessage(null);
     setSaving(true);
@@ -168,7 +178,7 @@ export default function MealsPage() {
       <Sidebar user={user} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="এক্সেল স্টাইল মিল চার্ট ও সেটিংস" />
+        <Navbar user={user} title="এক্সেল স্টাইল মিল চার্ট" />
 
         <main className="p-6 space-y-6 max-w-full mx-auto w-full">
           {/* Header Controls */}
@@ -179,7 +189,11 @@ export default function MealsPage() {
                 <span>দৈনিক মিল চার্ট (Excel Sheet Grid)</span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                ঘরের তারিখের উপরে ক্লিক করে চালু/বন্ধ বা বেলার মিল মান সেট করুন। বর্তমান সেটিং মান: সকাল ({bw}), দুপুর ({lw}), রাত ({dw})
+                {isAdminOrManager ? (
+                  `ঘরের তারিখের উপরে ক্লিক করে চালনা সেটিংস সেট করুন। সেটিং মান: সকাল (${bw}), দুপুর (${lw}), রাত (${dw})`
+                ) : (
+                  `সাধারণ মেম্বার মোড (Read-Only): মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।`
+                )}
               </p>
             </div>
 
@@ -202,7 +216,7 @@ export default function MealsPage() {
                   : 'bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300'
               }`}
             >
-              {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
               <span>{message.text}</span>
             </div>
           )}
@@ -213,8 +227,14 @@ export default function MealsPage() {
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                 মাস: {month} | মোট দিন: {daysInMonth}
               </span>
-              <span className="text-xs text-sky-600 dark:text-sky-400 font-medium">
-                💡 ঘরের উপর ক্লিক করে মিল এডিটর খুলুন
+              <span className="text-xs text-sky-600 dark:text-sky-400 font-medium flex items-center gap-1">
+                {isAdminOrManager ? (
+                  '💡 ঘরের উপর ক্লিক করে মিল এডিটর খুলুন'
+                ) : (
+                  <span className="text-slate-400 flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5" /> শুধুমাত্র দেখার অনুমতি (Read-Only)
+                  </span>
+                )}
               </span>
             </div>
 
@@ -264,12 +284,20 @@ export default function MealsPage() {
                             <td
                               key={day}
                               onClick={() => handleOpenCellModal(member, day)}
-                              className={`px-1 py-2 border-r border-slate-200 dark:border-slate-800 cursor-pointer transition-all hover:bg-sky-100 dark:hover:bg-sky-900/60 ${
+                              className={`px-1 py-2 border-r border-slate-200 dark:border-slate-800 transition-all ${
+                                isAdminOrManager
+                                  ? 'cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-900/60'
+                                  : 'cursor-default'
+                              } ${
                                 hasEntry && totalVal > 0
                                   ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-bold'
                                   : 'text-slate-400 dark:text-slate-600'
                               }`}
-                              title={`${member.name} - ${targetDate} (ক্লিক করুন এডিট করতে)`}
+                              title={
+                                isAdminOrManager
+                                  ? `${member.name} - ${targetDate} (ক্লিক করুন এডিট করতে)`
+                                  : `${member.name} - ${targetDate}`
+                              }
                             >
                               {hasEntry ? totalVal : '-'}
                             </td>
@@ -290,8 +318,8 @@ export default function MealsPage() {
         </main>
       </div>
 
-      {/* Excel Sheet Cell Config Modal */}
-      {selectedCell && (
+      {/* Excel Sheet Cell Config Modal (Admin & Manager Only) */}
+      {selectedCell && isAdminOrManager && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
