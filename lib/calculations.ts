@@ -34,6 +34,8 @@ export function formatCurrency(amount: number): string {
 }
 
 export async function calculateMonthlySummary(messId: string, month: string): Promise<MonthlySummaryResult> {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   // Get all members of the mess
   const users = await prisma.user.findMany({
     where: { messId, role: { not: 'SUPERADMIN' } },
@@ -41,27 +43,36 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
     orderBy: { name: 'asc' },
   });
 
-  // Get all meals for the month
+  // Get all meals for the month up to today (future dates not counted until they arrive)
   const meals = await prisma.meal.findMany({
     where: {
       messId,
-      date: { startsWith: month },
+      date: {
+        startsWith: month,
+        lte: todayStr,
+      },
     },
   });
 
-  // Get all expenses for the month
+  // Get all expenses for the month up to today
   const expenses = await prisma.expense.findMany({
     where: {
       messId,
-      date: { startsWith: month },
+      date: {
+        startsWith: month,
+        lte: todayStr,
+      },
     },
   });
 
-  // Get all payments for the month
+  // Get all payments for the month up to today
   const payments = await prisma.payment.findMany({
     where: {
       messId,
-      date: { startsWith: month },
+      date: {
+        startsWith: month,
+        lte: todayStr,
+      },
     },
   });
 

@@ -50,7 +50,17 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, date, breakfast = 0, lunch = 0, dinner = 0, note = '', mode = 'ON_ONCE' } = body;
+    const {
+      userId,
+      date,
+      breakfastCount = 1,
+      breakfastMode = 'ONCE', // 'DAILY' | 'ONCE' | 'OFF'
+      lunchCount = 1,
+      lunchMode = 'ONCE',
+      dinnerCount = 1,
+      dinnerMode = 'ONCE',
+      note = '',
+    } = body;
 
     if (!date) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
@@ -67,10 +77,6 @@ export async function POST(req: Request) {
 
     const targetUserId = userId || currentUser.id;
 
-    const b = Math.max(0, Number(breakfast) || 0);
-    const l = Math.max(0, Number(lunch) || 0);
-    const d = Math.max(0, Number(dinner) || 0);
-
     // Get mess weights
     const settings = await prisma.messSetting.findUnique({
       where: { messId: currentUser.messId },
@@ -80,55 +86,108 @@ export async function POST(req: Request) {
     const lw = settings?.lunchWeight ?? 1.0;
     const dw = settings?.dinnerWeight ?? 1.0;
 
-    const total = (b * bw) + (l * lw) + (d * dw);
+    const b = breakfastMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
+    const l = lunchMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
+    const d = dinnerMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
 
-    // Determine target dates for single day vs continuous daily modes
-    const targetDates: string[] = [date];
+    const totalD = (b * bw) + (l * lw) + (d * dw);
 
-    if (mode === 'ON_DAILY' || mode === 'OFF_DAILY') {
+    // 1. Save meal entry for target date D
+    await prisma.meal.upsert({
+      where: {
+        userId_date: {
+          userId: targetUserId,
+          date,
+        },
+      },
+      update: {
+        breakfast: b,
+        lunch: l,
+        dinner: d,
+        total: totalD,
+        note,
+      },
+      create: {
+        userId: targetUserId,
+        messId: currentUser.messId,
+        date,
+        breakfast: b,
+        lunch: l,
+        dinner: d,
+        total: totalD,
+        note,
+      },
+    });
+
+    // 2. Apply DAILY or OFF settings to FUTURE dates (> D) within the month
+    const hasDailyOrOffScope =
+      breakfastMode === 'DAILY' || breakfastMode === 'OFF' ||
+      lunchMode === 'DAILY' || lunchMode === 'OFF' ||
+      dinnerMode === 'DAILY' || dinnerMode === 'OFF';
+
+    if (hasDailyOrOffScope) {
       const startDate = new Date(date);
       const year = startDate.getFullYear();
-      const month = startDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const monthIndex = startDate.getMonth();
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
       const currentDay = startDate.getDate();
 
       for (let day = currentDay + 1; day <= daysInMonth; day++) {
         const dayStr = day < 10 ? `0${day}` : `${day}`;
-        const monthStr = (month + 1) < 10 ? `0${month + 1}` : `${month + 1}`;
-        targetDates.push(`${year}-${monthStr}-${dayStr}`);
+        const monthStr = (monthIndex + 1) < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
+        const futureDateStr = `${year}-${monthStr}-${dayStr}`;
+
+        const existingMeal = await prisma.meal.findUnique({
+          where: {
+            userId_date: {
+              userId: targetUserId,
+              date: futureDateStr,
+            },
+          },
+        });
+
+        let nextB = existingMeal ? existingMeal.breakfast : 1;
+        let nextL = existingMeal ? existingMeal.lunch : 1;
+        let nextD = existingMeal ? existingMeal.dinner : 1;
+
+        if (breakfastMode === 'DAILY') nextB = b;
+        if (breakfastMode === 'OFF') nextB = 0;
+
+        if (lunchMode === 'DAILY') nextL = l;
+        if (lunchMode === 'OFF') nextL = 0;
+
+        if (dinnerMode === 'DAILY') nextD = d;
+        if (dinnerMode === 'OFF') nextD = 0;
+
+        const nextTotal = (nextB * bw) + (nextL * lw) + (nextD * dw);
+
+        await prisma.meal.upsert({
+          where: {
+            userId_date: {
+              userId: targetUserId,
+              date: futureDateStr,
+            },
+          },
+          update: {
+            breakfast: nextB,
+            lunch: nextL,
+            dinner: nextD,
+            total: nextTotal,
+          },
+          create: {
+            userId: targetUserId,
+            messId: currentUser.messId,
+            date: futureDateStr,
+            breakfast: nextB,
+            lunch: nextL,
+            dinner: nextD,
+            total: nextTotal,
+          },
+        });
       }
     }
 
-    // Upsert meals for all target dates
-    for (const targetDate of targetDates) {
-      await prisma.meal.upsert({
-        where: {
-          userId_date: {
-            userId: targetUserId,
-            date: targetDate,
-          },
-        },
-        update: {
-          breakfast: b,
-          lunch: l,
-          dinner: d,
-          total,
-          note,
-        },
-        create: {
-          userId: targetUserId,
-          messId: currentUser.messId,
-          date: targetDate,
-          breakfast: b,
-          lunch: l,
-          dinner: d,
-          total,
-          note,
-        },
-      });
-    }
-
-    return NextResponse.json({ success: true, count: targetDates.length });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Save meal error:', error);
     return NextResponse.json({ error: 'Failed to save meal entry' }, { status: 500 });

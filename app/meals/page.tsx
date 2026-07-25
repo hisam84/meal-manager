@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { Utensils, CheckCircle2, AlertCircle, Calendar, RefreshCw, X, Clock, Lock } from 'lucide-react';
+import { Utensils, CheckCircle2, AlertCircle, Calendar, RefreshCw, X, Clock, Lock, Info } from 'lucide-react';
 
 export default function MealsPage() {
   const router = useRouter();
@@ -20,16 +20,25 @@ export default function MealsPage() {
   const [lw, setLw] = useState(1.0);
   const [dw, setDw] = useState(1.0);
 
-  // Modal / Cell Selection states
+  // Cell modal states
   const [selectedCell, setSelectedCell] = useState<{ member: any; date: string } | null>(null);
-  const [mode, setMode] = useState<'ON_DAILY' | 'ON_ONCE' | 'OFF_DAILY' | 'OFF_ONCE'>('ON_ONCE');
-  const [breakfast, setBreakfast] = useState(1);
-  const [lunch, setLunch] = useState(1);
-  const [dinner, setDinner] = useState(1);
+
+  // Per-meal time settings: Breakfast, Lunch, Dinner
+  const [breakfastCount, setBreakfastCount] = useState(1);
+  const [breakfastMode, setBreakfastMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+
+  const [lunchCount, setLunchCount] = useState(1);
+  const [lunchMode, setLunchMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+
+  const [dinnerCount, setDinnerCount] = useState(1);
+  const [dinnerMode, setDinnerMode] = useState<'DAILY' | 'ONCE' | 'OFF'>('ONCE');
+
   const [note, setNote] = useState('');
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -104,16 +113,28 @@ export default function MealsPage() {
     const existingMeal = meals.find((m) => m.userId === member.id && m.date === targetDate);
 
     setSelectedCell({ member, date: targetDate });
-    setMode('ON_ONCE');
+
     if (existingMeal) {
-      setBreakfast(existingMeal.breakfast);
-      setLunch(existingMeal.lunch);
-      setDinner(existingMeal.dinner);
+      setBreakfastCount(existingMeal.breakfast || 1);
+      setBreakfastMode(existingMeal.breakfast > 0 ? 'ONCE' : 'OFF');
+
+      setLunchCount(existingMeal.lunch || 1);
+      setLunchMode(existingMeal.lunch > 0 ? 'ONCE' : 'OFF');
+
+      setDinnerCount(existingMeal.dinner || 1);
+      setDinnerMode(existingMeal.dinner > 0 ? 'ONCE' : 'OFF');
+
       setNote(existingMeal.note || '');
     } else {
-      setBreakfast(1);
-      setLunch(1);
-      setDinner(1);
+      setBreakfastCount(1);
+      setBreakfastMode('ONCE');
+
+      setLunchCount(1);
+      setLunchMode('ONCE');
+
+      setDinnerCount(1);
+      setDinnerMode('ONCE');
+
       setNote('');
     }
   };
@@ -125,16 +146,6 @@ export default function MealsPage() {
     setMessage(null);
     setSaving(true);
 
-    let bVal = breakfast;
-    let lVal = lunch;
-    let dVal = dinner;
-
-    if (mode === 'OFF_DAILY' || mode === 'OFF_ONCE') {
-      bVal = 0;
-      lVal = 0;
-      dVal = 0;
-    }
-
     try {
       const res = await fetch('/api/meals', {
         method: 'POST',
@@ -142,18 +153,24 @@ export default function MealsPage() {
         body: JSON.stringify({
           userId: selectedCell.member.id,
           date: selectedCell.date,
-          breakfast: bVal,
-          lunch: lVal,
-          dinner: dVal,
+
+          breakfastCount: Math.max(0, Math.floor(Number(breakfastCount) || 0)),
+          breakfastMode,
+
+          lunchCount: Math.max(0, Math.floor(Number(lunchCount) || 0)),
+          lunchMode,
+
+          dinnerCount: Math.max(0, Math.floor(Number(dinnerCount) || 0)),
+          dinnerMode,
+
           note,
-          mode,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save meal entry');
 
-      setMessage({ type: 'success', text: 'মিল সেটিংস ও এন্ট্রি সফলভাবে সংরক্ষিত হয়েছে' });
+      setMessage({ type: 'success', text: `মিল সেটিংস (${selectedCell.date} থেকে পরবর্তী তারিখসমূহে) সংরক্ষিত হয়েছে` });
       setSelectedCell(null);
       fetchMeals(month);
     } catch (err: any) {
@@ -171,14 +188,18 @@ export default function MealsPage() {
     );
   }
 
-  const calculatedTotal = (breakfast * bw) + (lunch * lw) + (dinner * dw);
+  // Calculate live preview count for modal
+  const bVal = breakfastMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(breakfastCount) || 0));
+  const lVal = lunchMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
+  const dVal = dinnerMode === 'OFF' ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
+  const modalCalculatedTotal = (bVal * bw) + (lVal * lw) + (dVal * dw);
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <Sidebar user={user} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} title="এক্সেল স্টাইল মিল চার্ট" />
+        <Navbar user={user} title="দৈনিক মিল চার্ট ও বেলা-ভিত্তিক সেটিংস" />
 
         <main className="p-6 space-y-6 max-w-full mx-auto w-full">
           {/* Header Controls */}
@@ -189,11 +210,7 @@ export default function MealsPage() {
                 <span>দৈনিক মিল চার্ট (Excel Sheet Grid)</span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {isAdminOrManager ? (
-                  `ঘরের তারিখের উপরে ক্লিক করে চালনা সেটিংস সেট করুন। সেটিং মান: সকাল (${bw}), দুপুর (${lw}), রাত (${dw})`
-                ) : (
-                  `সাধারণ মেম্বার মোড (Read-Only): মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।`
-                )}
+                ঘরের উপর ক্লিক করে বেলা-ভিত্তিক মিল সংখ্যা ও মোড (প্রতিদিন/একদিন/বন্ধ) কনফিগার করুন। বর্তমান সেটিং মান: সকাল ({bw}), দুপুর ({lw}), রাত ({dw})
               </p>
             </div>
 
@@ -224,12 +241,13 @@ export default function MealsPage() {
           {/* Excel Sheet Matrix Table */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden space-y-3">
             <div className="flex items-center justify-between px-2">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-                মাস: {month} | মোট দিন: {daysInMonth}
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1.5">
+                <Info className="w-4 h-4 text-sky-600" />
+                <span>আজকের তারিখ ({todayStr}) পর্যন্ত মিল মোট পয়েন্টে গণনাকৃত হবে। ভবিষ্যৎ তারিখসমূহ কেবল নির্ধারিত থাকবে।</span>
               </span>
               <span className="text-xs text-sky-600 dark:text-sky-400 font-medium flex items-center gap-1">
                 {isAdminOrManager ? (
-                  '💡 ঘরের উপর ক্লিক করে মিল এডিটর খুলুন'
+                  '💡 ঘরের উপর ক্লিক করে বেলার মিল এডিটর খুলুন'
                 ) : (
                   <span className="text-slate-400 flex items-center gap-1">
                     <Lock className="w-3.5 h-3.5" /> শুধুমাত্র দেখার অনুমতি (Read-Only)
@@ -253,8 +271,8 @@ export default function MealsPage() {
                         {day}
                       </th>
                     ))}
-                    <th className="px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 min-w-[80px] bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-extrabold">
-                      মোট মিল
+                    <th className="px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 min-w-[90px] bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-extrabold">
+                      মোট মিল (আজ পর্যন্ত)
                     </th>
                   </tr>
                 </thead>
@@ -262,7 +280,11 @@ export default function MealsPage() {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
                   {members.map((member) => {
                     const userMeals = meals.filter((m) => m.userId === member.id);
-                    const memberTotalMeals = userMeals.reduce((sum, m) => sum + m.total, 0);
+
+                    // Count total ONLY for meals up to today
+                    const memberTotalMeals = userMeals
+                      .filter((m) => m.date <= todayStr)
+                      .reduce((sum, m) => sum + m.total, 0);
 
                     return (
                       <tr key={member.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
@@ -277,6 +299,7 @@ export default function MealsPage() {
                           const targetDate = `${month}-${dayFormatted}`;
                           const mealEntry = userMeals.find((m) => m.date === targetDate);
 
+                          const isFutureDate = targetDate > todayStr;
                           const hasEntry = Boolean(mealEntry);
                           const totalVal = mealEntry ? mealEntry.total : 0;
 
@@ -289,17 +312,19 @@ export default function MealsPage() {
                                   ? 'cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-900/60'
                                   : 'cursor-default'
                               } ${
-                                hasEntry && totalVal > 0
+                                isFutureDate
+                                  ? 'bg-slate-50/40 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 italic'
+                                  : hasEntry && totalVal > 0
                                   ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-bold'
                                   : 'text-slate-400 dark:text-slate-600'
                               }`}
                               title={
-                                isAdminOrManager
-                                  ? `${member.name} - ${targetDate} (ক্লিক করুন এডিট করতে)`
+                                isFutureDate
+                                  ? `${member.name} - ${targetDate} (ভবিষ্যৎ তারিখ - এখনও কাউন্ট হয়নি)`
                                   : `${member.name} - ${targetDate}`
                               }
                             >
-                              {hasEntry ? totalVal : '-'}
+                              {hasEntry ? (isFutureDate ? `(${totalVal})` : totalVal) : '-'}
                             </td>
                           );
                         })}
@@ -318,18 +343,18 @@ export default function MealsPage() {
         </main>
       </div>
 
-      {/* Excel Sheet Cell Config Modal (Admin & Manager Only) */}
+      {/* Excel Sheet Per-Meal Time Config Modal (Admin & Manager Only) */}
       {selectedCell && isAdminOrManager && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-xl w-full space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-sky-600" />
-                  <span>মিল সেটিংস & এন্ট্রি</span>
+                  <span>বেলাভিত্তিক মিল সেটিংস & ইনপুট</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  মেম্বার: <span className="font-bold text-slate-900 dark:text-white">{selectedCell.member.name}</span> | তারিখ: <span className="font-bold text-sky-600">{selectedCell.date}</span>
+                  মেম্বার: <span className="font-bold text-slate-900 dark:text-white">{selectedCell.member.name}</span> | নির্বাচন তারিখ: <span className="font-bold text-sky-600">{selectedCell.date}</span>
                 </p>
               </div>
 
@@ -342,139 +367,194 @@ export default function MealsPage() {
             </div>
 
             <form onSubmit={handleSaveMealEntry} className="space-y-4">
-              {/* Mode Selection */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase">
-                  মিল মোড নির্বাচন (Mode Options)
-                </label>
+              {/* Breakfast Config */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                    সকালের নাস্তা (Breakfast Weight: {bw})
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-slate-500 font-medium">ইনপুট সংখ্যা:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      required
+                      value={breakfastCount}
+                      onChange={(e) => setBreakfastCount(Number(e.target.value))}
+                      className="w-16 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-center font-bold text-xs"
+                    />
+                  </div>
+                </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => setMode('ON_DAILY')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      mode === 'ON_DAILY'
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    onClick={() => setBreakfastMode('DAILY')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      breakfastMode === 'DAILY'
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>চালু প্রতিদিন</span>
+                    <RefreshCw className="w-3 h-3" />
+                    <span>প্রতিদিন</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setMode('ON_ONCE')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      mode === 'ON_ONCE'
-                        ? 'bg-sky-600 border-sky-600 text-white shadow-md shadow-sky-600/30'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    onClick={() => setBreakfastMode('ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      breakfastMode === 'ONCE'
+                        ? 'bg-sky-600 border-sky-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>চালু একদিন</span>
+                    <Clock className="w-3 h-3" />
+                    <span>একদিন</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setMode('OFF_DAILY')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      mode === 'OFF_DAILY'
-                        ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-600/30'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    onClick={() => setBreakfastMode('OFF')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      breakfastMode === 'OFF'
+                        ? 'bg-rose-600 border-rose-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>বন্ধ প্রতিদিন</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setMode('OFF_ONCE')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      mode === 'OFF_ONCE'
-                        ? 'bg-amber-600 border-amber-600 text-white shadow-md shadow-amber-600/30'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>বন্ধ একদিন</span>
+                    <span>বন্ধ</span>
                   </button>
                 </div>
               </div>
 
-              {/* Meal Weight Count Options (Visible for ON modes) */}
-              {(mode === 'ON_DAILY' || mode === 'ON_ONCE') && (
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1 text-center">
-                      <span className="text-[11px] font-bold uppercase text-slate-500">সকাল (মান: {bw})</span>
-                      <div className="flex gap-1 pt-1">
-                        {[0, 0.5, 1].map((val) => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setBreakfast(val)}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                              breakfast === val
-                                ? 'bg-sky-600 border-sky-600 text-white'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            {val}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1 text-center">
-                      <span className="text-[11px] font-bold uppercase text-slate-500">দুপুর (মান: {lw})</span>
-                      <div className="flex gap-1 pt-1">
-                        {[0, 0.5, 1].map((val) => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setLunch(val)}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                              lunch === val
-                                ? 'bg-sky-600 border-sky-600 text-white'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            {val}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1 text-center">
-                      <span className="text-[11px] font-bold uppercase text-slate-500">রাত (মান: {dw})</span>
-                      <div className="flex gap-1 pt-1">
-                        {[0, 0.5, 1].map((val) => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setDinner(val)}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${
-                              dinner === val
-                                ? 'bg-sky-600 border-sky-600 text-white'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            {val}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              {/* Lunch Config */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                    দুপুরের খাবার (Lunch Weight: {lw})
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-slate-500 font-medium">ইনপুট সংখ্যা:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      required
+                      value={lunchCount}
+                      onChange={(e) => setLunchCount(Number(e.target.value))}
+                      className="w-16 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-center font-bold text-xs"
+                    />
                   </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setLunchMode('DAILY')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      lunchMode === 'DAILY'
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>প্রতিদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLunchMode('ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      lunchMode === 'ONCE'
+                        ? 'bg-sky-600 border-sky-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    <span>একদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLunchMode('OFF')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      lunchMode === 'OFF'
+                        ? 'bg-rose-600 border-rose-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>বন্ধ</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Dinner Config */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                    রাতের খাবার (Dinner Weight: {dw})
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-slate-500 font-medium">ইনপুট সংখ্যা:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      required
+                      value={dinnerCount}
+                      onChange={(e) => setDinnerCount(Number(e.target.value))}
+                      className="w-16 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-center font-bold text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setDinnerMode('DAILY')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      dinnerMode === 'DAILY'
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>প্রতিদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDinnerMode('ONCE')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      dinnerMode === 'ONCE'
+                        ? 'bg-sky-600 border-sky-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    <span>একদিন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDinnerMode('OFF')}
+                    className={`py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-1 ${
+                      dinnerMode === 'OFF'
+                        ? 'bg-rose-600 border-rose-600 text-white'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>বন্ধ</span>
+                  </button>
+                </div>
+              </div>
 
               {/* Dynamic Calculation Summary */}
               <div className="bg-sky-50 dark:bg-sky-950/40 p-3 rounded-xl border border-sky-200 dark:border-sky-900/60 flex items-center justify-between text-xs font-semibold text-sky-900 dark:text-sky-200">
-                <span>সেটিংস অনুযায়ী পয়েন্ট মান:</span>
+                <span>মিল সেটিং মান অনুয়ায়ী পয়েন্ট হিসাব:</span>
                 <span className="text-sm font-extrabold text-sky-600 dark:text-sky-400">
-                  {mode === 'OFF_DAILY' || mode === 'OFF_ONCE' ? 0 : calculatedTotal} টি মিল
+                  {modalCalculatedTotal} টি মিল
                 </span>
               </div>
 
