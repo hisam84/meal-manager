@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import { Utensils, Calendar, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Utensils, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function MealsPage() {
   const router = useRouter();
@@ -15,6 +15,11 @@ export default function MealsPage() {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [members, setMembers] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
+
+  // Meal weights from Settings
+  const [bw, setBw] = useState(1.0);
+  const [lw, setLw] = useState(1.0);
+  const [dw, setDw] = useState(1.0);
 
   // Form states
   const [breakfast, setBreakfast] = useState(1);
@@ -35,12 +40,25 @@ export default function MealsPage() {
           setUser(data.user);
           setSelectedUserId(data.user.id);
           fetchMembers();
+          fetchSettings();
           fetchMeals(date.slice(0, 7));
         }
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  const fetchSettings = () => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setBw(data.breakfastWeight ?? 1.0);
+          setLw(data.lunchWeight ?? 1.0);
+          setDw(data.dinnerWeight ?? 1.0);
+        }
+      });
+  };
 
   const fetchMembers = () => {
     fetch('/api/members')
@@ -127,7 +145,7 @@ export default function MealsPage() {
   }
 
   const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
-  const totalCalculated = breakfast + lunch + dinner;
+  const totalCalculated = (breakfast * bw) + (lunch * lw) + (dinner * dw);
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
@@ -139,11 +157,16 @@ export default function MealsPage() {
         <main className="p-6 space-y-6 max-w-7xl mx-auto w-full">
           {/* Meal Entry Form */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Utensils className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                <span>দৈনিক মিল এন্ট্রি</span>
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Utensils className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                  <span>দৈনিক মিল এন্ট্রি</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  সেটিংসের বর্তমান মিল রেট মান: সকাল ({bw}), দুপুর ({lw}), রাত ({dw})
+                </p>
+              </div>
 
               <div className="flex gap-2">
                 <button
@@ -233,7 +256,10 @@ export default function MealsPage() {
               {/* Breakfast, Lunch, Dinner selectors */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">সকালের নাস্তা</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">সকালের নাস্তা</span>
+                    <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">মান: {bw}</span>
+                  </div>
                   <div className="flex gap-2">
                     {[0, 0.5, 1].map((val) => (
                       <button
@@ -253,7 +279,10 @@ export default function MealsPage() {
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">দুপুরের খাবার</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">দুপুরের খাবার</span>
+                    <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">মান: {lw}</span>
+                  </div>
                   <div className="flex gap-2">
                     {[0, 0.5, 1].map((val) => (
                       <button
@@ -273,7 +302,10 @@ export default function MealsPage() {
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">রাতের খাবার</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">রাতের খাবার</span>
+                    <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">মান: {dw}</span>
+                  </div>
                   <div className="flex gap-2">
                     {[0, 0.5, 1].map((val) => (
                       <button
@@ -295,7 +327,7 @@ export default function MealsPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <div className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                  হিসাবকৃত মোট মিল: <span className="text-sky-600 dark:text-sky-400 font-bold text-base">{totalCalculated}</span>
+                  সেটিংস অনুযায়ী হিসাবকৃত মোট মিল: <span className="text-sky-600 dark:text-sky-400 font-bold text-base">{totalCalculated}</span>
                 </div>
 
                 <button
@@ -322,7 +354,7 @@ export default function MealsPage() {
                     <th className="px-4 py-3">সকাল</th>
                     <th className="px-4 py-3">দুপুর</th>
                     <th className="px-4 py-3">রাত</th>
-                    <th className="px-4 py-3 font-semibold">মোট</th>
+                    <th className="px-4 py-3 font-semibold">মোট মিল (Weighted)</th>
                     <th className="px-4 py-3">নোট</th>
                     <th className="px-4 py-3 rounded-r-lg text-right">অ্যাকশন</th>
                   </tr>
