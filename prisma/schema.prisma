@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Mess {
+  id           String        @id @default(cuid())
+  name         String
+  code         String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  users        User[]
+  meals        Meal[]
+  expenses     Expense[]
+  payments     Payment[]
+  cookBills    CookBill[]
+  managerTerms ManagerTerm[]
+  settings     MessSetting?
+}
+
+model User {
+  id               String        @id @default(cuid())
+  name             String
+  phone            String        @unique
+  email            String?       @unique
+  password         String
+  role             String        @default("MEMBER") // SUPERADMIN, ADMIN, MANAGER, MEMBER
+  active           Boolean       @default(true)
+  messId           String?
+  mess             Mess?         @relation(fields: [messId], references: [id], onDelete: SetNull)
+  managerId        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  meals            Meal[]
+  spentExpenses    Expense[]     @relation("SpentBy")
+  addedExpenses    Expense[]     @relation("AddedBy")
+  payments         Payment[]     @relation("MemberPayments")
+  recordedPayments Payment[]     @relation("RecordedBy")
+  managerTerms     ManagerTerm[]
+}
+
+model Meal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messId    String
+  mess      Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  date      String   // Format: YYYY-MM-DD
+  breakfast Float    @default(0)
+  lunch     Float    @default(0)
+  dinner    Float    @default(0)
+  total     Float    @default(0)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  messId      String
+  mess        Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  amount      Float
+  description String
+  category    String   // Grocery, Rice, Fish, Meat, Vegetable, Gas, Electricity, Cook, Rent, Water, Internet, Other
+  date        String   // Format: YYYY-MM-DD
+  spentById   String?
+  spentBy     User?    @relation("SpentBy", fields: [spentById], references: [id], onDelete: SetNull)
+  addedById   String
+  addedBy     User     @relation("AddedBy", fields: [addedById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  messId    String
+  mess      Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("MemberPayments", fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float
+  date      String   // Format: YYYY-MM-DD
+  note      String?
+  addedById String
+  addedBy   User     @relation("RecordedBy", fields: [addedById], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CookBill {
+  id          String   @id @default(cuid())
+  messId      String
+  mess        Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  month       String   // Format: YYYY-MM
+  totalAmount Float
+  memberBills String   // JSON string of per-member bills breakdown
+  status      String   @default("UNPAID")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ManagerTerm {
+  id        String   @id @default(cuid())
+  messId    String
+  mess      Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate String
+  endDate   String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+
+model MessSetting {
+  id               String   @id @default(cuid())
+  messId           String   @unique
+  mess             Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+  breakfastWeight  Float    @default(1.0)
+  lunchWeight      Float    @default(1.0)
+  dinnerWeight     Float    @default(1.0)
+  updatedAt        DateTime @updatedAt
+}
