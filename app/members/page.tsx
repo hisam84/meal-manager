@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/components/PageShell';
-import { Users, UserPlus, KeyRound, UserCheck, UserX, Trash2, CheckCircle2, AlertCircle, Calendar, ShieldAlert } from 'lucide-react';
+import { Users, UserPlus, KeyRound, UserCheck, UserX, Trash2, CheckCircle2, AlertCircle, Calendar, ShieldAlert, Pencil } from 'lucide-react';
 
 export default function MembersPage() {
   const router = useRouter();
@@ -24,6 +24,12 @@ export default function MembersPage() {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [electing, setElecting] = useState(false);
+
+  // Member edit state
+  const [editModalUser, setEditModalUser] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editRole, setEditRole] = useState('MEMBER');
 
   // Password reset state
   const [resetModalUser, setResetModalUser] = useState<any>(null);
@@ -168,6 +174,33 @@ export default function MembersPage() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Role change failed');
+      fetchMembers();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalUser || !editName || !editPhone) return;
+
+    try {
+      const res = await fetch('/api/members', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editModalUser.id,
+          name: editName,
+          phone: editPhone,
+          role: editRole,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update member');
+
+      setMessage({ type: 'success', text: `মেম্বার ${editName}-এর তথ্য আপডেট করা হয়েছে` });
+      setEditModalUser(null);
       fetchMembers();
     } catch (err: any) {
       alert(err.message);
@@ -487,6 +520,19 @@ export default function MembersPage() {
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
                         <button
+                          onClick={() => {
+                            setEditModalUser(m);
+                            setEditName(m.name);
+                            setEditPhone(m.phone);
+                            setEditRole(m.role);
+                          }}
+                          className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-colors"
+                          title="মেম্বার তথ্য এডিট"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+
+                        <button
                           onClick={() => setResetModalUser(m)}
                           className="p-1.5 text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-lg transition-colors"
                           title="পাসওয়ার্ড রিসেট"
@@ -509,6 +555,76 @@ export default function MembersPage() {
             </div>
           </div>
       </PageShell>
+
+      {/* Edit Member Modal */}
+      {editModalUser && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-amber-500" />
+              <span>মেম্বার তথ্য এডিট করুন</span>
+            </h3>
+            <form onSubmit={handleEditMember} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  মেম্বারের নাম
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  ফোন নম্বর (Login Phone)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  রোল (Role)
+                </label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="MEMBER">MEMBER</option>
+                  <option value="MANAGER">MANAGER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditModalUser(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-amber-600/30"
+                >
+                  সেভ করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Password Reset Modal */}
       {resetModalUser && (

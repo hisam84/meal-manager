@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/components/PageShell';
-import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle, Pencil } from 'lucide-react';
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -21,6 +21,14 @@ export default function SuperAdminPage() {
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Edit Mess Admin state
+  const [editMess, setEditMess] = useState<any>(null);
+  const [editMessName, setEditMessName] = useState('');
+  const [editAdminName, setEditAdminName] = useState('');
+  const [editAdminPhone, setEditAdminPhone] = useState('');
+  const [editAdminPassword, setEditAdminPassword] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -86,6 +94,40 @@ export default function SuperAdminPage() {
       setMessage({ type: 'error', text: err.message });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleUpdateMessAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editMess) return;
+
+    setUpdating(true);
+    try {
+      const adminUser = editMess.users?.[0];
+      const res = await fetch('/api/messes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messId: editMess.id,
+          messName: editMessName,
+          adminId: adminUser?.id,
+          adminName: editAdminName,
+          adminPhone: editAdminPhone,
+          adminPassword: editAdminPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update mess & admin');
+
+      setMessage({ type: 'success', text: `মেস "${editMessName}" ও এডমিনের তথ্য আপডেট করা হয়েছে!` });
+      setEditMess(null);
+      setEditAdminPassword('');
+      fetchMesses();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -243,9 +285,24 @@ export default function SuperAdminPage() {
 
                     {messAdmin && (
                       <div className="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-700/60 space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
-                          <UserCheck className="w-3.5 h-3.5 text-sky-600" />
-                          <span>মেস এডমিন: {messAdmin.name}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+                            <UserCheck className="w-3.5 h-3.5 text-sky-600" />
+                            <span>মেস এডমিন: {messAdmin.name}</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditMess(m);
+                              setEditMessName(m.name);
+                              setEditAdminName(messAdmin.name);
+                              setEditAdminPhone(messAdmin.phone);
+                              setEditAdminPassword('');
+                            }}
+                            className="p-1 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded transition-colors"
+                            title="মেস ও এডমিন তথ্য এডিট"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                         <div className="text-[11px] text-slate-500 font-mono pl-5">
                           ফোন: {messAdmin.phone}
@@ -268,6 +325,88 @@ export default function SuperAdminPage() {
               })}
             </div>
           </div>
+
+      {/* Edit Mess Admin Modal */}
+      {editMess && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-amber-500" />
+              <span>মেস ও এডমিন তথ্য এডিট করুন</span>
+            </h3>
+            <form onSubmit={handleUpdateMessAdmin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  মেসের নাম
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editMessName}
+                  onChange={(e) => setEditMessName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  মেস এডমিনের নাম
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editAdminName}
+                  onChange={(e) => setEditAdminName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  এডমিনের ফোন নম্বর (Username)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editAdminPhone}
+                  onChange={(e) => setEditAdminPhone(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  নতুন পাসওয়ার্ড (ঐচ্ছিক — পরিবর্তন করতে চাইলে দিন)
+                </label>
+                <input
+                  type="password"
+                  placeholder="পাসওয়ার্ড পরিবর্তন না করতে চাইলে ফাঁকা রাখুন"
+                  value={editAdminPassword}
+                  onChange={(e) => setEditAdminPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditMess(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-amber-600/30 disabled:opacity-50"
+                >
+                  {updating ? 'আপডেট হচ্ছে...' : 'সেভ করুন'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }

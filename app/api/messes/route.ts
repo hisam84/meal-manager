@@ -104,3 +104,62 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create new mess and admin' }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || currentUser.role !== 'SUPERADMIN') {
+      return NextResponse.json({ error: 'Super Admin authorization required' }, { status: 403 });
+    }
+
+    const { messId, messName, adminId, adminName, adminPhone, adminPassword } = await req.json();
+
+    if (!messId) {
+      return NextResponse.json({ error: 'Mess ID is required' }, { status: 400 });
+    }
+
+    const mess = await prisma.mess.findUnique({ where: { id: messId } });
+    if (!mess) {
+      return NextResponse.json({ error: 'Mess not found' }, { status: 404 });
+    }
+
+    if (messName) {
+      await prisma.mess.update({
+        where: { id: messId },
+        data: { name: messName.trim() },
+      });
+    }
+
+    if (adminId) {
+      const adminUser = await prisma.user.findUnique({ where: { id: adminId } });
+      if (!adminUser) {
+        return NextResponse.json({ error: 'Mess Admin user not found' }, { status: 404 });
+      }
+
+      if (adminPhone && adminPhone.trim() !== adminUser.phone) {
+        const phoneOwner = await prisma.user.findUnique({ where: { phone: adminPhone.trim() } });
+        if (phoneOwner) {
+          return NextResponse.json({ error: 'Admin phone number is already registered to another user' }, { status: 400 });
+        }
+      }
+
+      const updateData: any = {};
+      if (adminName) updateData.name = adminName.trim();
+      if (adminPhone) updateData.phone = adminPhone.trim();
+      if (adminPassword && adminPassword.trim() !== '') {
+        updateData.password = await hashPassword(adminPassword.trim());
+      }
+
+      await prisma.user.update({
+        where: { id: adminId },
+        data: updateData,
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Update mess admin error:', error);
+    return NextResponse.json({ error: 'Failed to update mess admin information' }, { status: 500 });
+  }
+}
+

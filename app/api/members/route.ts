@@ -87,7 +87,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Only Admins can update member roles or status' }, { status: 403 });
     }
 
-    const { id, role, active, password } = await req.json();
+    const { id, name, phone, role, active, password } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -96,6 +96,14 @@ export async function PUT(req: Request) {
     const targetUser = await prisma.user.findUnique({ where: { id } });
     if (!targetUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Phone uniqueness check if changing phone
+    if (phone && phone.trim() !== targetUser.phone) {
+      const phoneOwner = await prisma.user.findUnique({ where: { phone: phone.trim() } });
+      if (phoneOwner) {
+        return NextResponse.json({ error: 'This phone number is already used by another member' }, { status: 400 });
+      }
     }
 
     // Last admin protection: cannot deactivate or demote last Admin
@@ -109,6 +117,8 @@ export async function PUT(req: Request) {
     }
 
     const updateData: any = {};
+    if (name) updateData.name = name.trim();
+    if (phone) updateData.phone = phone.trim();
     if (role) updateData.role = role;
     if (active !== undefined) updateData.active = Boolean(active);
     if (password) updateData.password = await hashPassword(password);
