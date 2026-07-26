@@ -45,6 +45,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Start date cannot be after end date' }, { status: 400 });
     }
 
+    // Check if there is an overlapping manager term for the same dates in this mess
+    const overlappingTerm = await prisma.managerTerm.findFirst({
+      where: {
+        messId: currentUser.messId,
+        startDate: { lte: endDate },
+        endDate: { gte: startDate },
+      },
+      include: { user: true },
+    });
+
+    if (overlappingTerm) {
+      const existingName = overlappingTerm.title || overlappingTerm.user?.name || 'অন্য মেম্বার';
+      return NextResponse.json({
+        error: `এই তারিখের মধ্যে (${overlappingTerm.startDate} থেকে ${overlappingTerm.endDate}) ইতোমধ্যে "${existingName}" ম্যানেজার হিসেবে দায়িত্বপ্রাপ্ত রয়েছেন। একই তারিখে দ্বিতীয় ম্যানেজার দেওয়া যাবে না। আগে তালিকা থেকে আগের মেয়াদ এডিট বা বাতিল করুন।`,
+      }, { status: 400 });
+    }
+
     // Auto-generate title if not provided
     const userObj = await prisma.user.findUnique({ where: { id: userId } });
     const autoTitle = title || `${userObj?.name || 'Manager'}-${startDate} to ${endDate}`;
@@ -72,7 +89,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, term });
   } catch (error: any) {
     console.error('Create manager term error:', error);
-    return NextResponse.json({ error: 'Failed to elect manager' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to elect manager' }, { status: 500 });
   }
 }
 
