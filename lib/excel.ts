@@ -47,7 +47,8 @@ export function generateMealChartExcel(
   month: string,
   members: any[],
   meals: any[],
-  settings: any
+  settings: any,
+  managerTerms: any[] = []
 ): Buffer {
   const wb = XLSX.utils.book_new();
 
@@ -55,17 +56,23 @@ export function generateMealChartExcel(
   const monthIndex = parseInt(month.split('-')[1]) - 1;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
+  // Filter days: only include days that fall within an elected manager term
+  // If no terms exist for the month, fall back to all days in month
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1).filter((day) => {
+    if (!managerTerms || managerTerms.length === 0) return true;
+    const dayFormatted = day < 10 ? `0${day}` : `${day}`;
+    const targetDate = `${month}-${dayFormatted}`;
+    return managerTerms.some((term) => targetDate >= term.startDate && targetDate <= term.endDate);
+  });
+
   // Create header rows
-  // Row 1: Title
-  // Row 2: Member Name | 1 | 1 | 1 | 2 | 2 | 2 | ... | Total
-  // Row 3:             | স | দু | রা | স | দু | রা | ... | Meals
   const row2: string[] = ['সদস্যের নাম'];
   const row3: string[] = [''];
 
-  for (let day = 1; day <= daysInMonth; day++) {
+  daysArray.forEach((day) => {
     row2.push(`${day}`, '', '');
     row3.push('সকাল', 'দুপুর', 'রাত');
-  }
+  });
   row2.push('মোট মিল');
   row3.push('');
 
@@ -89,7 +96,7 @@ export function generateMealChartExcel(
     const memberRow: any[] = [m.name];
     let memberTotalMeals = 0;
 
-    for (let day = 1; day <= daysInMonth; day++) {
+    daysArray.forEach((day) => {
       const dayStr = day < 10 ? `0${day}` : `${day}`;
       const dateStr = `${month}-${dayStr}`;
       const entry = mealMap[`${m.id}_${dateStr}`];
@@ -104,7 +111,7 @@ export function generateMealChartExcel(
 
       const dayTotal = (b * bw) + (l * lw) + (d * dw);
       memberTotalMeals += dayTotal;
-    }
+    });
 
     memberRow.push(Number(memberTotalMeals.toFixed(2)));
     rows.push(memberRow);

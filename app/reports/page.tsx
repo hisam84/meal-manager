@@ -19,6 +19,7 @@ export default function ReportsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
+  const [managerTerms, setManagerTerms] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -41,10 +42,12 @@ export default function ReportsPage() {
       fetch('/api/members').then((res) => res.json()),
       fetch(`/api/meals?month=${m}`).then((res) => res.json()),
       fetch('/api/settings').then((res) => res.json()),
-    ]).then(([membersData, mealsData, settingsData]) => {
+      fetch('/api/manager-terms').then((res) => res.json()),
+    ]).then(([membersData, mealsData, settingsData, termsData]) => {
       if (Array.isArray(membersData)) setMembers(membersData);
       if (Array.isArray(mealsData)) setMeals(mealsData);
       if (settingsData) setSettings(settingsData);
+      if (Array.isArray(termsData)) setManagerTerms(termsData);
     });
   };
 
@@ -94,7 +97,16 @@ export default function ReportsPage() {
 
   const year = parseInt(month.split('-')[0]) || new Date().getFullYear();
   const monthIndex = parseInt(month.split('-')[1]) - 1 || new Date().getMonth();
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const totalDaysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+  // Filter daysArray: only include days that fall within an elected manager term
+  // If no terms exist for the month, fall back to all days in month
+  const daysArray = Array.from({ length: totalDaysInMonth }, (_, i) => i + 1).filter((day) => {
+    if (!managerTerms || managerTerms.length === 0) return true;
+    const dayFormatted = day < 10 ? `0${day}` : `${day}`;
+    const targetDate = `${month}-${dayFormatted}`;
+    return managerTerms.some((term) => targetDate >= term.startDate && targetDate <= term.endDate);
+  });
 
   const mealMap: Record<string, any> = {};
   meals.forEach((m) => {
@@ -276,7 +288,7 @@ export default function ReportsPage() {
                     <th className="px-3 py-2 text-left sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700">
                       সদস্যের নাম
                     </th>
-                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
+                    {daysArray.map((day) => (
                       <th key={day} colSpan={3} className="px-2 py-1.5 border-r border-slate-200 dark:border-slate-700">
                         {day}
                       </th>
@@ -289,7 +301,7 @@ export default function ReportsPage() {
                     <th className="px-3 py-1.5 text-left sticky left-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
                       বেলা ➔
                     </th>
-                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
+                    {daysArray.map((day) => (
                       <Fragment key={day}>
                         <th className="px-1 py-1 bg-sky-50/50 dark:bg-sky-950/20 text-sky-600">স</th>
                         <th className="px-1 py-1 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600">দু</th>
@@ -309,7 +321,7 @@ export default function ReportsPage() {
                         <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800">
                           {m.name}
                         </td>
-                        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                        {daysArray.map((day) => {
                           const dayStr = day < 10 ? `0${day}` : `${day}`;
                           const dateStr = `${month}-${dayStr}`;
                           const entry = mealMap[`${m.id}_${dateStr}`];

@@ -33,7 +33,11 @@ export async function GET(req: Request) {
         where: { messId: currentUser.messId },
       });
 
-      const excelBuffer = generateMealChartExcel(month, members, meals, settings);
+      const managerTerms = await prisma.managerTerm.findMany({
+        where: { messId: currentUser.messId },
+      });
+
+      const excelBuffer = generateMealChartExcel(month, members, meals, settings, managerTerms);
       const uint8Array = new Uint8Array(excelBuffer);
 
       return new Response(uint8Array, {
