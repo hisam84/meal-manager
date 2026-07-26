@@ -12,8 +12,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const todayStr = new Date().toISOString().slice(0, 7); // YYYY-MM
     const month = searchParams.get('month') || todayStr;
+    const termId = searchParams.get('termId') || undefined;
 
-    const summary = await calculateMonthlySummary(currentUser.messId, month);
+    const summary = await calculateMonthlySummary(currentUser.messId, month, termId);
     return NextResponse.json(summary);
   } catch (error: any) {
     console.error('Fetch summary error:', error);

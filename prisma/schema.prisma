@@ -111,6 +111,7 @@ model ManagerTerm {
   mess      Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
   startDate String
   endDate   String
   status    String   @default("ACTIVE")

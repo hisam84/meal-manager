@@ -35,8 +35,19 @@ export function formatCurrency(amount: number): string {
   return `${amount < 0 ? '-' : ''}৳${formatted}`;
 }
 
-export async function calculateMonthlySummary(messId: string, month: string): Promise<MonthlySummaryResult> {
+export async function calculateMonthlySummary(messId: string, month: string, termId?: string): Promise<MonthlySummaryResult> {
   const todayStr = new Date().toISOString().slice(0, 10);
+
+  let termStartDate: string | undefined;
+  let termEndDate: string | undefined;
+
+  if (termId) {
+    const termObj = await prisma.managerTerm.findUnique({ where: { id: termId } });
+    if (termObj) {
+      termStartDate = termObj.startDate;
+      termEndDate = termObj.endDate;
+    }
+  }
 
   // Get all members of the mess
   const users = await prisma.user.findMany({
@@ -45,36 +56,34 @@ export async function calculateMonthlySummary(messId: string, month: string): Pr
     orderBy: { name: 'asc' },
   });
 
-  // Get all meals for the month up to today (future dates not counted until they arrive)
+  // Date condition for meals, expenses, payments
+  const dateFilter: any = { startsWith: month, lte: todayStr };
+  if (termStartDate && termEndDate) {
+    dateFilter.gte = termStartDate;
+    dateFilter.lte = termEndDate < todayStr ? termEndDate : todayStr;
+  }
+
+  // Get meals
   const meals = await prisma.meal.findMany({
     where: {
       messId,
-      date: {
-        startsWith: month,
-        lte: todayStr,
-      },
+      date: dateFilter,
     },
   });
 
-  // Get all expenses for the month up to today
+  // Get expenses
   const expenses = await prisma.expense.findMany({
     where: {
       messId,
-      date: {
-        startsWith: month,
-        lte: todayStr,
-      },
+      date: dateFilter,
     },
   });
 
-  // Get all payments for the month up to today
+  // Get payments
   const payments = await prisma.payment.findMany({
     where: {
       messId,
-      date: {
-        startsWith: month,
-        lte: todayStr,
-      },
+      date: dateFilter,
     },
   });
 

@@ -20,6 +20,10 @@ export default function ReportsPage() {
   const [meals, setMeals] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [managerTerms, setManagerTerms] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
+
+  // Selected Manager Term State
+  const [selectedTermId, setSelectedTermId] = useState<string>('ALL');
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -37,17 +41,28 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const loadMealChartData = (m: string) => {
+  const loadMealChartData = (m: string, termId?: string) => {
+    const tId = termId !== undefined ? termId : selectedTermId;
+    const summaryUrl = tId && tId !== 'ALL' ? `/api/summary?month=${m}&termId=${tId}` : `/api/summary?month=${m}`;
+
     Promise.all([
       fetch('/api/members').then((res) => res.json()),
       fetch(`/api/meals?month=${m}`).then((res) => res.json()),
       fetch('/api/settings').then((res) => res.json()),
       fetch('/api/manager-terms').then((res) => res.json()),
-    ]).then(([membersData, mealsData, settingsData, termsData]) => {
+      fetch(summaryUrl).then((res) => res.json()),
+    ]).then(([membersData, mealsData, settingsData, termsData, summaryData]) => {
       if (Array.isArray(membersData)) setMembers(membersData);
       if (Array.isArray(mealsData)) setMeals(mealsData);
       if (settingsData) setSettings(settingsData);
-      if (Array.isArray(termsData)) setManagerTerms(termsData);
+      if (Array.isArray(termsData)) {
+        setManagerTerms(termsData);
+        // By default select current active term if ALL is selected
+        if (tId === 'ALL' && termsData.length > 0) {
+          setSelectedTermId(termsData[0].id);
+        }
+      }
+      if (summaryData && !summaryData.error) setSummary(summaryData);
     });
   };
 
@@ -99,13 +114,20 @@ export default function ReportsPage() {
   const monthIndex = parseInt(month.split('-')[1]) - 1 || new Date().getMonth();
   const totalDaysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
-  // Filter daysArray: only include days that fall within an elected manager term
-  // If no terms exist for the month, fall back to all days in month
+  // Active term object
+  const activeTerm = managerTerms.find((t) => t.id === selectedTermId);
+
+  // Filter daysArray: only include days that fall within selected manager term
   const daysArray = Array.from({ length: totalDaysInMonth }, (_, i) => i + 1).filter((day) => {
-    if (!managerTerms || managerTerms.length === 0) return true;
+    if (!activeTerm) {
+      if (!managerTerms || managerTerms.length === 0) return true;
+      const dayFormatted = day < 10 ? `0${day}` : `${day}`;
+      const targetDate = `${month}-${dayFormatted}`;
+      return managerTerms.some((term) => targetDate >= term.startDate && targetDate <= term.endDate);
+    }
     const dayFormatted = day < 10 ? `0${day}` : `${day}`;
     const targetDate = `${month}-${dayFormatted}`;
-    return managerTerms.some((term) => targetDate >= term.startDate && targetDate <= term.endDate);
+    return targetDate >= activeTerm.startDate && targetDate <= activeTerm.endDate;
   });
 
   const mealMap: Record<string, any> = {};
@@ -127,133 +149,42 @@ export default function ReportsPage() {
                 <span>রিপোর্ট ও নোটিফিকেশন</span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Excel ডাউনলোড এবং Nodemailer ইমেইল রিপোর্টিং
+                ম্যানেজার অনুযায়ী রিপোর্ট ফিল্টারিং ও প্রিন্টিং
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">মাস নির্বাচন:</label>
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => {
-                  setMonth(e.target.value);
-                  loadMealChartData(e.target.value);
-                }}
-                className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-sm font-semibold"
-              />
-            </div>
-          </div>
-
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Meal Chart Excel Download */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                <FileSpreadsheet className="w-6 h-6" />
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">মিল চার্ট Excel</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  প্রতিদিনের বেলা অনুযায়ী সদস্যভিত্তিক মিল চার্ট এক্সপোর্ট করুন
-                </p>
-              </div>
-
-              <button
-                onClick={() => window.open(`/api/reports/export?month=${month}&type=meal-chart`, '_blank')}
-                className="w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all flex items-center justify-center gap-2 text-sm"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>মিল চার্ট Excel ডাউনলোড</span>
-              </button>
-            </div>
-
-            {/* Monthly Summary Excel Download */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <FileSpreadsheet className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">সামারি Excel</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  মেম্বারদের খরচ, খালা বিল ও জমার সামারি রিপোর্ট এক্সপোর্ট
-                </p>
-              </div>
-
-              <button
-                onClick={handleDownloadExcel}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-sm"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>সামারি Excel ডাউনলোড</span>
-              </button>
-            </div>
-
-            {/* Email Dispatch via Nodemailer */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Mail className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">ইমেইল নোটিফিকেশন</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Nodemailer দিয়ে মাসিক সামারি রিপোর্ট ইমেইলে পাঠান
-                </p>
-              </div>
-
-              {message && (
-                <div
-                  className={`p-2 rounded-xl text-xs flex items-center gap-2 ${
-                    message.type === 'success'
-                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'
-                  }`}
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mr-2">ম্যানেজার নির্বাচন:</label>
+                <select
+                  value={selectedTermId}
+                  onChange={(e) => {
+                    setSelectedTermId(e.target.value);
+                    loadMealChartData(month, e.target.value);
+                  }}
+                  className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
-                  {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-                  <span>{message.text}</span>
-                </div>
-              )}
+                  <option value="ALL">সকল ম্যানেজার মেম্বারশিপ</option>
+                  {managerTerms.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title || `${t.user?.name} (${t.startDate} ➔ ${t.endDate})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <form onSubmit={handleSendEmail} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mr-2">মাস:</label>
                 <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  type="month"
+                  value={month}
+                  onChange={(e) => {
+                    setMonth(e.target.value);
+                    loadMealChartData(e.target.value);
+                  }}
+                  className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs font-semibold"
                 />
-
-                <button
-                  type="submit"
-                  disabled={sendingEmail}
-                  className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl shadow-lg shadow-amber-600/30 transition-all flex items-center justify-center gap-2 text-xs disabled:opacity-50"
-                >
-                  <Mail className="w-4 h-4" />
-                  <span>{sendingEmail ? 'পাঠানো হচ্ছে...' : 'ইমেইল পাঠান'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Member Summary Print Card */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                <Printer className="w-6 h-6" />
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">হিসাব তালিকা প্রিন্ট</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা A4 ল্যান্ডস্কেপে প্রিন্ট করুন
-                </p>
-              </div>
-
-              <button
-                onClick={() => router.push('/summary')}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 text-sm"
-              >
-                <Printer className="w-4 h-4" />
-                <span>সামারি হিসাব প্রিন্ট</span>
-              </button>
             </div>
           </div>
 
@@ -357,6 +288,75 @@ export default function ReportsPage() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Member Detailed Summary Breakdown Table */}
+          <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা ({month})</h3>
+              <button
+                onClick={handlePrint}
+                className="no-print px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
+              >
+                <Printer className="w-4 h-4" />
+                <span>প্রিন্ট করুন</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-3 rounded-l-lg">মেম্বার নাম</th>
+                    <th className="px-4 py-3">ফোন</th>
+                    <th className="px-4 py-3">সকাল</th>
+                    <th className="px-4 py-3">দুপুর</th>
+                    <th className="px-4 py-3">রাত</th>
+                    <th className="px-4 py-3 font-semibold">মোট মিল</th>
+                    <th className="px-4 py-3">মিল খরচ (৳)</th>
+                    <th className="px-4 py-3">খালা বিল (৳)</th>
+                    <th className="px-4 py-3">মোট জমা (৳)</th>
+                    <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
+                    <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {summary?.memberSummaries?.map((m: any) => (
+                    <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
+                      <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.breakfast}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.lunch}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.dinner}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{m.totalMeals}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
+                      <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
+                      <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
+                      <td className={`px-4 py-3 font-extrabold ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        ৳{m.balance}
+                      </td>
+                      <td className="px-4 py-3">
+                        {m.status === 'Receivable' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                            পাওনা
+                          </span>
+                        )}
+                        {m.status === 'Payable' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                            দেনা
+                          </span>
+                        )}
+                        {m.status === 'Settled' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            পরিশোধিত
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

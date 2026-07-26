@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Only Admins can elect meal managers' }, { status: 403 });
     }
 
-    const { userId, startDate, endDate } = await req.json();
+    const { userId, startDate, endDate, title } = await req.json();
 
     if (!userId || !startDate || !endDate) {
       return NextResponse.json({ error: 'Member, start date, and end date are required' }, { status: 400 });
@@ -45,6 +45,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Start date cannot be after end date' }, { status: 400 });
     }
 
+    // Auto-generate title if not provided
+    const userObj = await prisma.user.findUnique({ where: { id: userId } });
+    const autoTitle = title || `${userObj?.name || 'Manager'}-${startDate} to ${endDate}`;
+
     // Create Manager Term
     const term = await prisma.managerTerm.create({
       data: {
@@ -52,13 +56,13 @@ export async function POST(req: Request) {
         userId,
         startDate,
         endDate,
+        title: autoTitle,
         status: 'ACTIVE',
       },
     });
 
     // Update user role to MANAGER if currently MEMBER
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user && user.role === 'MEMBER') {
+    if (userObj && userObj.role === 'MEMBER') {
       await prisma.user.update({
         where: { id: userId },
         data: { role: 'MANAGER' },
@@ -69,6 +73,43 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Create manager term error:', error);
     return NextResponse.json({ error: 'Failed to elect manager' }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !currentUser.messId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Only Admins can edit manager terms' }, { status: 403 });
+    }
+
+    const { id, startDate, endDate, title } = await req.json();
+
+    if (!id || !startDate || !endDate) {
+      return NextResponse.json({ error: 'Term ID, start date, and end date are required' }, { status: 400 });
+    }
+
+    if (startDate > endDate) {
+      return NextResponse.json({ error: 'Start date cannot be after end date' }, { status: 400 });
+    }
+
+    const updated = await prisma.managerTerm.update({
+      where: { id },
+      data: {
+        startDate,
+        endDate,
+        title: title || undefined,
+      },
+    });
+
+    return NextResponse.json({ success: true, term: updated });
+  } catch (error: any) {
+    console.error('Update manager term error:', error);
+    return NextResponse.json({ error: 'Failed to update manager term' }, { status: 500 });
   }
 }
 

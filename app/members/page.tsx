@@ -23,7 +23,14 @@ export default function MembersPage() {
   const [electUserId, setElectUserId] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+  const [termTitle, setTermTitle] = useState('');
   const [electing, setElecting] = useState(false);
+
+  // Edit Term Modal states
+  const [editTerm, setEditTerm] = useState<any>(null);
+  const [editTermTitle, setEditTermTitle] = useState('');
+  const [editTermStartDate, setEditTermStartDate] = useState('');
+  const [editTermEndDate, setEditTermEndDate] = useState('');
 
   // Member edit state
   const [editModalUser, setEditModalUser] = useState<any>(null);
@@ -58,10 +65,7 @@ export default function MembersPage() {
     fetch('/api/members')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setMembers(data);
-          if (data.length > 0) setElectUserId(data[0].id);
-        }
+        if (Array.isArray(data)) setMembers(data);
       });
   };
 
@@ -119,6 +123,7 @@ export default function MembersPage() {
           userId: electUserId,
           startDate,
           endDate,
+          title: termTitle,
         }),
       });
 
@@ -126,12 +131,40 @@ export default function MembersPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to elect manager');
 
       setMessage({ type: 'success', text: 'নির্দিষ্ট মেয়াদের জন্য ম্যানেজার সফলভাবে নির্বাচন করা হয়েছে!' });
+      setTermTitle('');
       fetchMembers();
       fetchManagerTerms();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
       setElecting(false);
+    }
+  };
+
+  const handleUpdateManagerTerm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTerm) return;
+
+    try {
+      const res = await fetch('/api/manager-terms', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editTerm.id,
+          startDate: editTermStartDate,
+          endDate: editTermEndDate,
+          title: editTermTitle,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update manager term');
+
+      setMessage({ type: 'success', text: 'ম্যানেজারের দায়িত্বের তারিখ ও নাম সফলভাবে আপডেট করা হয়েছে!' });
+      setEditTerm(null);
+      fetchManagerTerms();
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -276,7 +309,7 @@ export default function MembersPage() {
               নির্বাচিত ম্যানেজার শুধুমাত্র তার নির্ধারিত শুরুর ও শেষ তারিখের মধ্যে মেস হিসাব, মিল ইনপুট ও খরচ এন্ট্রি করতে পারবেন।
             </p>
 
-            <form onSubmit={handleElectManager} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <form onSubmit={handleElectManager} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                   ম্যানেজার নির্বাচন
@@ -286,12 +319,26 @@ export default function MembersPage() {
                   onChange={(e) => setElectUserId(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
+                  <option value="">-- সদস্য নির্বাচন করুন --</option>
                   {members.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name} ({m.phone}) - {m.role}
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  পরিচিতি নাম / টাইটেল (ঐচ্ছিক)
+                </label>
+                <input
+                  type="text"
+                  placeholder="উদাঃ হিসাম-জুলাই-সেকেন্ড হাফ ২০২৬"
+                  value={termTitle}
+                  onChange={(e) => setTermTitle(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
               </div>
 
               <div>
@@ -320,7 +367,7 @@ export default function MembersPage() {
                 />
               </div>
 
-              <div className="sm:col-span-3 flex justify-end">
+              <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
                 <button
                   type="submit"
                   disabled={electing}
@@ -344,7 +391,7 @@ export default function MembersPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                     <tr>
-                      <th className="px-4 py-3 rounded-l-lg">ম্যানেজার</th>
+                      <th className="px-4 py-3 rounded-l-lg">পরিচিতি নাম / ম্যানেজার</th>
                       <th className="px-4 py-3">শুরুর তারিখ</th>
                       <th className="px-4 py-3">শেষ তারিখ</th>
                       <th className="px-4 py-3">স্ট্যাটাস</th>
@@ -354,7 +401,10 @@ export default function MembersPage() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {managerTerms.map((term) => (
                       <tr key={term.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{term.user?.name}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-bold text-slate-900 dark:text-white">{term.title || term.user?.name}</p>
+                          <span className="text-xs text-slate-500">ম্যানেজার: {term.user?.name}</span>
+                        </td>
                         <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.startDate}</td>
                         <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.endDate}</td>
                         <td className="px-4 py-3">
@@ -362,12 +412,26 @@ export default function MembersPage() {
                             সক্রিয় মেয়াদ
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditTerm(term);
+                              setEditTermTitle(term.title || '');
+                              setEditTermStartDate(term.startDate);
+                              setEditTermEndDate(term.endDate);
+                            }}
+                            className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-colors text-xs font-semibold"
+                            title="দায়িত্ব সময়সীমা এডিট"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+
                           <button
                             onClick={() => handleRevokeManagerTerm(term.id)}
                             className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors text-xs font-semibold"
+                            title="বাতিল করুন"
                           >
-                            বাতিল করুন
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -661,6 +725,75 @@ export default function MembersPage() {
                   className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-sky-600/30"
                 >
                   রিসেট করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Manager Term Modal */}
+      {editTerm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-amber-500" />
+              <span>ম্যানেজারের দায়িত্ব ও মেয়াদ সময়সীমা এডিট</span>
+            </h3>
+            <form onSubmit={handleUpdateManagerTerm} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  পরিচিতি নাম / টাইটেল
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="উদাঃ হিসাম-জুলাই-সেকেন্ড হাফ ২০২৬"
+                  value={editTermTitle}
+                  onChange={(e) => setEditTermTitle(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  দায়িত্ব শুরুর তারিখ (Start Date)
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={editTermStartDate}
+                  onChange={(e) => setEditTermStartDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  দায়িত্ব শেষ তারিখ (End Date)
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={editTermEndDate}
+                  onChange={(e) => setEditTermEndDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditTerm(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-amber-600/30"
+                >
+                  আপডেট করুন
                 </button>
               </div>
             </form>
