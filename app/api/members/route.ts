@@ -159,6 +159,23 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Check if target member is currently an active Manager (today falls in their term)
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const activeTerm = await prisma.managerTerm.findFirst({
+      where: {
+        messId: currentUser.messId,
+        userId: targetUser.id,
+        startDate: { lte: todayStr },
+        endDate: { gte: todayStr },
+      },
+    });
+
+    if (activeTerm) {
+      return NextResponse.json({
+        error: `রানিং মেয়াদের কারেন্ট ম্যানেজার (${targetUser.name})-কে ডিলিট করা যাবে না। প্রথমে ম্যানেজারের মেয়াদ পরিবর্তন বা ফিল্ড আপডেট করুন।`,
+      }, { status: 400 });
+    }
+
     // Last admin protection
     if (targetUser.role === 'ADMIN') {
       const adminCount = await prisma.user.count({

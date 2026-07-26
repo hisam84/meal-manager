@@ -402,8 +402,8 @@ export default function MembersPage() {
                     {managerTerms.map((term) => (
                       <tr key={term.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                         <td className="px-4 py-3">
-                          <p className="font-bold text-slate-900 dark:text-white">{term.title || term.user?.name}</p>
-                          <span className="text-xs text-slate-500">ম্যানেজার: {term.user?.name}</span>
+                          <p className="font-bold text-slate-900 dark:text-white">{term.title || term.user?.name || 'প্রাক্তন ম্যানেজার'}</p>
+                          <span className="text-xs text-slate-500">ম্যানেজার: {term.user?.name || 'প্রাক্তন মেম্বার (মুছে ফেলা হয়েছে)'}</span>
                         </td>
                         <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.startDate}</td>
                         <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{term.endDate}</td>

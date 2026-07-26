@@ -167,7 +167,7 @@ export default function ReportsPage() {
                   <option value="ALL">সকল ম্যানেজার মেম্বারশিপ</option>
                   {managerTerms.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.title || `${t.user?.name} (${t.startDate} ➔ ${t.endDate})`}
+                      {t.title || `${t.user?.name || 'প্রাক্তন ম্যানেজার'} (${t.startDate} ➔ ${t.endDate})`}
                     </option>
                   ))}
                 </select>
