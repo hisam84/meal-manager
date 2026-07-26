@@ -10,6 +10,7 @@ export interface MonthlySummaryResult {
   totalPayments: number;
   totalReceivable: number;
   totalPayable: number;
+  managerMealDeduction: number; // meals deducted from total for rate calculation
   memberSummaries: {
     userId: string;
     name: string;
@@ -19,6 +20,7 @@ export interface MonthlySummaryResult {
     lunch: number;
     dinner: number;
     totalMeals: number;
+    billableMeals: number; // after deduction for manager
     mealCost: number;
     cookBill: number;
     paid: number;
@@ -40,12 +42,18 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
 
   let termStartDate: string | undefined;
   let termEndDate: string | undefined;
+  let termManagerUserId: string | null = null;
+  let termMealDeductionType: string = 'NONE';
+  let termMealDeductionAmount: number = 0;
 
   if (termId) {
     const termObj = await prisma.managerTerm.findUnique({ where: { id: termId } });
     if (termObj) {
       termStartDate = termObj.startDate;
       termEndDate = termObj.endDate;
+      termManagerUserId = termObj.userId ?? null;
+      termMealDeductionType = termObj.mealDeductionType ?? 'NONE';
+      termMealDeductionAmount = termObj.mealDeductionAmount ?? 0;
     }
   }
 
@@ -107,7 +115,24 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   const totalMeals = meals.reduce((sum, m) => sum + m.total, 0);
   const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
 
-  const mealRate = totalMeals > 0 ? totalExpenses / totalMeals : 0;
+  // --- Manager Meal Deduction ---
+  // Find manager's actual meal total within term
+  let managerMealDeduction = 0;
+  if (termManagerUserId && termMealDeductionType !== 'NONE') {
+    const managerMeals = meals.filter((m) => m.userId === termManagerUserId);
+    const managerTotalMeals = managerMeals.reduce((sum, m) => sum + m.total, 0);
+
+    if (termMealDeductionType === 'ALL') {
+      managerMealDeduction = managerTotalMeals;
+    } else if (termMealDeductionType === 'FIXED') {
+      // Deduct the specified fixed amount, but not more than the manager's actual meals
+      managerMealDeduction = Math.min(termMealDeductionAmount, managerTotalMeals);
+    }
+  }
+
+  // Meal rate is calculated on net meals (total minus deducted)
+  const netTotalMeals = Math.max(0, totalMeals - managerMealDeduction);
+  const mealRate = netTotalMeals > 0 ? totalExpenses / netTotalMeals : 0;
 
   let totalReceivable = 0;
   let totalPayable = 0;
@@ -119,7 +144,17 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     const dCount = userMeals.reduce((sum, m) => sum + m.dinner, 0);
     const userTotalMeals = userMeals.reduce((sum, m) => sum + m.total, 0);
 
-    const mealCost = userTotalMeals * mealRate;
+    // For the manager, subtract their meal deduction from billable meals
+    let billableMeals = userTotalMeals;
+    if (termManagerUserId && user.id === termManagerUserId && termMealDeductionType !== 'NONE') {
+      if (termMealDeductionType === 'ALL') {
+        billableMeals = 0;
+      } else if (termMealDeductionType === 'FIXED') {
+        billableMeals = Math.max(0, userTotalMeals - termMealDeductionAmount);
+      }
+    }
+
+    const mealCost = billableMeals * mealRate;
     const cookBillAmount = parsedMemberCookBills[user.id] || (users.length > 0 ? Number((totalCookBill / users.length).toFixed(2)) : 0);
     const userPayments = payments.filter((p) => p.userId === user.id);
     const paid = userPayments.reduce((sum, p) => sum + p.amount, 0);
@@ -143,6 +178,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
       lunch: lCount,
       dinner: dCount,
       totalMeals: userTotalMeals,
+      billableMeals: Number(billableMeals.toFixed(2)),
       mealCost: Number(mealCost.toFixed(2)),
       cookBill: Number(cookBillAmount.toFixed(2)),
       paid: Number(paid.toFixed(2)),
@@ -161,6 +197,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalPayments: Number(totalPayments.toFixed(2)),
     totalReceivable: Number(totalReceivable.toFixed(2)),
     totalPayable: Number(totalPayable.toFixed(2)),
+    managerMealDeduction: Number(managerMealDeduction.toFixed(2)),
     memberSummaries,
   };
 }

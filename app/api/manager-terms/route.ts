@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Only Admins can elect meal managers' }, { status: 403 });
     }
 
-    const { userId, startDate, endDate, title } = await req.json();
+    const { userId, startDate, endDate, title, mealDeductionType, mealDeductionAmount } = await req.json();
 
     if (!userId || !startDate || !endDate) {
       return NextResponse.json({ error: 'Member, start date, and end date are required' }, { status: 400 });
@@ -44,6 +44,10 @@ export async function POST(req: Request) {
     if (startDate > endDate) {
       return NextResponse.json({ error: 'Start date cannot be after end date' }, { status: 400 });
     }
+
+    // Validate deduction
+    const deductionType: string = ['NONE', 'ALL', 'FIXED'].includes(mealDeductionType) ? mealDeductionType : 'NONE';
+    const deductionAmount: number = deductionType === 'FIXED' ? Math.max(0, Number(mealDeductionAmount) || 0) : 0;
 
     // Check if there is an overlapping manager term for the same dates in this mess
     const overlappingTerm = await prisma.managerTerm.findFirst({
@@ -75,6 +79,8 @@ export async function POST(req: Request) {
         endDate,
         title: autoTitle,
         status: 'ACTIVE',
+        mealDeductionType: deductionType,
+        mealDeductionAmount: deductionAmount,
       },
     });
 
@@ -104,7 +110,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Only Admins can edit manager terms' }, { status: 403 });
     }
 
-    const { id, startDate, endDate, title } = await req.json();
+    const { id, startDate, endDate, title, mealDeductionType, mealDeductionAmount } = await req.json();
 
     if (!id || !startDate || !endDate) {
       return NextResponse.json({ error: 'Term ID, start date, and end date are required' }, { status: 400 });
@@ -114,12 +120,18 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Start date cannot be after end date' }, { status: 400 });
     }
 
+    // Validate deduction
+    const deductionType: string = ['NONE', 'ALL', 'FIXED'].includes(mealDeductionType) ? mealDeductionType : 'NONE';
+    const deductionAmount: number = deductionType === 'FIXED' ? Math.max(0, Number(mealDeductionAmount) || 0) : 0;
+
     const updated = await prisma.managerTerm.update({
       where: { id },
       data: {
         startDate,
         endDate,
         title: title || undefined,
+        mealDeductionType: deductionType,
+        mealDeductionAmount: deductionAmount,
       },
     });
 

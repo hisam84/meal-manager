@@ -319,6 +319,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3">দুপুর</th>
                     <th className="px-4 py-3">রাত</th>
                     <th className="px-4 py-3 font-semibold">মোট মিল</th>
+                    <th className="px-4 py-3">বিলযোগ্য মিল</th>
                     <th className="px-4 py-3">মিল খরচ (৳)</th>
                     <th className="px-4 py-3">খালা বিল (৳)</th>
                     <th className="px-4 py-3">মোট জমা (৳)</th>
@@ -335,6 +336,16 @@ export default function ReportsPage() {
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.lunch}</td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.dinner}</td>
                       <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{m.totalMeals}</td>
+                      <td className="px-4 py-3">
+                        {m.billableMeals !== undefined && m.billableMeals !== m.totalMeals ? (
+                          <span className="font-semibold text-amber-600 dark:text-amber-400">
+                            {m.billableMeals}
+                            <span className="text-[10px] ml-1 text-slate-400">({m.totalMeals - m.billableMeals} মাইনাস)</span>
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-slate-600 dark:text-slate-400">{m.billableMeals ?? m.totalMeals}</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
                       <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
                       <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
@@ -363,6 +374,14 @@ export default function ReportsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Manager Meal Deduction Notice */}
+            {summary?.managerMealDeduction > 0 && (
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                <span className="font-bold">⚠ ম্যানেজার মিল মাইনাস:</span>
+                <span>এই টার্মে ম্যানেজারের <strong>{summary.managerMealDeduction}</strong> মিল মোট মিল থেকে বাদ দিয়ে মিলরেট ও ম্যানেজারের বিল হিসাব করা হয়েছে। মিলের রেকর্ড অপরিবর্তিত।</span>
+              </div>
+            )}
           </div>
     </PageShell>
   );
