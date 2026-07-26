@@ -42,6 +42,10 @@ export default function MembersPage() {
   const [resetModalUser, setResetModalUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState('');
 
+  // Modal display states for forms
+  const [showElectModal, setShowElectModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -105,6 +109,7 @@ export default function MembersPage() {
       setPhone('');
       setEmail('');
       setPassword('');
+      setShowAddMemberModal(false);
       fetchMembers();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -135,6 +140,7 @@ export default function MembersPage() {
 
       setMessage({ type: 'success', text: 'নির্দিষ্ট মেয়াদের জন্য ম্যানেজার সফলভাবে নির্বাচন করা হয়েছে!' });
       setTermTitle('');
+      setShowElectModal(false);
       fetchMembers();
       fetchManagerTerms();
     } catch (err: any) {
@@ -302,96 +308,36 @@ export default function MembersPage() {
             </div>
           )}
 
-          {/* Elect Meal Manager Section (Date Specific Manager Assignment) */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-sky-200 dark:border-sky-900/60 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              <span>নির্দিষ্ট মেয়াদের জন্য ম্যানেজার নির্বাচন করুন (Elect Meal Manager)</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              নির্বাচিত ম্যানেজার শুধুমাত্র তার নির্ধারিত শুরুর ও শেষ তারিখের মধ্যে মেস হিসাব, মিল ইনপুট ও খরচ এন্ট্রি করতে পারবেন।
-            </p>
+          {/* Action Header Buttons & Manager Terms List Section */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-amber-600" />
+                <span>ম্যানেজারদের দায়িত্ব পালনের সময়সীমা তালিকা</span>
+              </h3>
 
-            <form onSubmit={handleElectManager} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  ম্যানেজার নির্বাচন
-                </label>
-                <select
-                  value={electUserId}
-                  onChange={(e) => setElectUserId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                >
-                  <option value="">-- সদস্য নির্বাচন করুন --</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.phone}) - {m.role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  পরিচিতি নাম / টাইটেল (ঐচ্ছিক)
-                </label>
-                <input
-                  type="text"
-                  placeholder="উদাঃ হিসাম-জুলাই-সেকেন্ড হাফ ২০২৬"
-                  value={termTitle}
-                  onChange={(e) => setTermTitle(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  দায়িত্ব শুরুর তারিখ (Start Date)
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  দায়িত্ব শেষ তারিখ (End Date)
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+              <div className="flex flex-wrap gap-2.5">
                 <button
-                  type="submit"
-                  disabled={electing}
-                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all text-sm disabled:opacity-50"
+                  onClick={() => setShowElectModal(true)}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-sky-600/20 transition-all flex items-center gap-1.5"
                 >
-                  {electing ? 'সংরক্ষণ হচ্ছে...' : 'ম্যানেজার দায়িত্ব প্রদান করুন'}
+                  <Calendar className="w-4 h-4" />
+                  <span>ম্যানেজার নির্বাচন পপ-আপ</span>
+                </button>
+
+                <button
+                  onClick={() => setShowAddMemberModal(true)}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>নতুন মেম্বার যুক্ত পপ-আপ</span>
                 </button>
               </div>
-            </form>
-          </div>
-
-          {/* Manager Terms List Section */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-amber-600" />
-              <span>ম্যানেজারদের দায়িত্ব পালনের সময়সীমা তালিকা</span>
-            </h3>
+            </div>
 
             {managerTerms.length === 0 ? (
               <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-xl">
-                বর্তমানে কোন ম্যানেজারিয়ালের মেয়াদ সংরক্ষিত নেই। নতুন মেয়াদ নির্বাচন করতে উপরের ফর্মটি ব্যবহার করুন।
+                বর্তমানে কোন ম্যানেজারিয়ালের মেয়াদ সংরক্ষিত নেই। নতুন মেয়াদ নির্বাচন করতে উপরের "ম্যানেজার নির্বাচন" বাটনে ক্লিক করুন।
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -447,96 +393,6 @@ export default function MembersPage() {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Add Member Form */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              <span>নতুন মেম্বার যুক্ত করুন</span>
-            </h2>
-
-            <form onSubmit={handleAddMember} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  পূর্ণ নাম
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="মেম্বারের নাম"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  ফোন নম্বর
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="01700000000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  ইমেইল (ঐচ্ছিক)
-                </label>
-                <input
-                  type="email"
-                  placeholder="member@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  পাসওয়ার্ড
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  রোল / পদবী
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
-                >
-                  <option value="MEMBER">সাধারণ মেম্বার (Member)</option>
-                  <option value="MANAGER">মিল ম্যানেজার (Manager)</option>
-                  <option value="ADMIN">মেস এডমিন (Admin)</option>
-                </select>
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-3 flex justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all disabled:opacity-50 text-sm"
-                >
-                  {saving ? 'যোগ হচ্ছে...' : 'মেম্বার যুক্ত করুন'}
-                </button>
-              </div>
-            </form>
           </div>
 
           {/* Members List Table */}
@@ -801,6 +657,203 @@ export default function MembersPage() {
                   className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-amber-600/30"
                 >
                   আপডেট করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Elect Manager Form Modal */}
+      {showElectModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span>নির্দিষ্ট মেয়াদের জন্য ম্যানেজার নির্বাচন করুন</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              নির্বাচিত ম্যানেজার শুধুমাত্র তার নির্ধারিত শুরুর ও শেষ তারিখের মধ্যে মেস হিসাব, মিল ইনপুট ও খরচ এন্ট্রি করতে পারবেন।
+            </p>
+
+            <form onSubmit={handleElectManager} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  ম্যানেজার নির্বাচন
+                </label>
+                <select
+                  value={electUserId}
+                  onChange={(e) => setElectUserId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="">-- সদস্য নির্বাচন করুন --</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.phone}) - {m.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  পরিচিতি নাম / টাইটেল (ঐচ্ছিক)
+                </label>
+                <input
+                  type="text"
+                  placeholder="উদাঃ হিসাম-জুলাই-সেকেন্ড হাফ ২০২৬"
+                  value={termTitle}
+                  onChange={(e) => setTermTitle(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    দায়িত্ব শুরুর তারিখ
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    দায়িত্ব শেষ তারিখ
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowElectModal(false)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={electing}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/30 text-xs disabled:opacity-50"
+                >
+                  {electing ? 'সংরক্ষণ হচ্ছে...' : 'ম্যানেজার দায়িত্ব প্রদান করুন'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Form Modal */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <span>নতুন মেম্বার যুক্ত করুন</span>
+            </h3>
+
+            <form onSubmit={handleAddMember} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  পূর্ণ নাম
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="মেম্বারের নাম"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    ফোন নম্বর
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="01700000000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    ইমেইল (ঐচ্ছিক)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="member@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    পাসওয়ার্ড
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    রোল / পদবী
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    <option value="MEMBER">সাধারণ মেম্বার (Member)</option>
+                    <option value="MANAGER">মিল ম্যানেজার (Manager)</option>
+                    <option value="ADMIN">মেস এডমিন (Admin)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddMemberModal(false)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/30 text-xs disabled:opacity-50"
+                >
+                  {saving ? 'যোগ হচ্ছে...' : 'মেম্বার যুক্ত করুন'}
                 </button>
               </div>
             </form>
