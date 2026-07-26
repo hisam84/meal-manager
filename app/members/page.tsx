@@ -382,14 +382,18 @@ export default function MembersPage() {
             </form>
           </div>
 
-          {/* Active Manager Terms List */}
-          {managerTerms.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-amber-600" />
-                <span>ম্যানেজারদের দায়িত্ব পালনের সময়সীমা তালিকা</span>
-              </h3>
+          {/* Manager Terms List Section */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-amber-600" />
+              <span>ম্যানেজারদের দায়িত্ব পালনের সময়সীমা তালিকা</span>
+            </h3>
 
+            {managerTerms.length === 0 ? (
+              <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-xl">
+                বর্তমানে কোন ম্যানেজারিয়ালের মেয়াদ সংরক্ষিত নেই। নতুন মেয়াদ নির্বাচন করতে উপরের ফর্মটি ব্যবহার করুন।
+              </div>
+            ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
@@ -442,8 +446,8 @@ export default function MembersPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Add Member Form */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
