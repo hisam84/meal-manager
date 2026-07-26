@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
   CheckCircle2,
   Plus,
+  ChefHat,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -92,7 +93,7 @@ export default function DashboardPage() {
 
           {/* Admin / Manager KPI Grid */}
           {isAdminOrManager ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                   <span className="text-xs font-semibold uppercase">মোট মেম্বার</span>
@@ -115,7 +116,7 @@ export default function DashboardPage() {
 
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                  <span className="text-xs font-semibold uppercase">মোট খরচ</span>
+                  <span className="text-xs font-semibold uppercase">মোট বাজার খরচ</span>
                   <Receipt className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -125,17 +126,27 @@ export default function DashboardPage() {
 
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-semibold uppercase">মোট বুয়ার বিল</span>
+                  <ChefHat className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                </div>
+                <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
+                  ৳{summary?.totalCookBill?.toLocaleString('bn-BD') || 0}
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                   <span className="text-xs font-semibold uppercase">মিল রেট</span>
                   <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
-                <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   ৳{summary?.mealRate || 0}
                 </div>
               </div>
             </div>
           ) : (
             /* Member KPI Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">আমার মোট মিল</span>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -147,6 +158,13 @@ export default function DashboardPage() {
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">আমার মিল বিল</span>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
                   ৳{mySummary?.mealCost || 0}
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">আমার বুয়ার বিল</span>
+                <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
+                  ৳{mySummary?.cookBill || 0}
                 </div>
               </div>
 

@@ -37,10 +37,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { month, totalAmount, memberBills } = await req.json();
+    const { month, perPersonAmount, totalAmount, memberBills } = await req.json();
 
-    if (!month || !totalAmount) {
-      return NextResponse.json({ error: 'Month and total amount are required' }, { status: 400 });
+    if (!month) {
+      return NextResponse.json({ error: 'Month is required' }, { status: 400 });
     }
 
     // Manager term authorization for the selected month (check 1st day of month)
@@ -53,10 +53,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const numericTotal = Number(totalAmount);
-    if (isNaN(numericTotal) || numericTotal <= 0) {
-      return NextResponse.json({ error: 'Invalid total cook bill amount' }, { status: 400 });
+    // Get all mess members
+    const members = await prisma.user.findMany({
+      where: { messId: currentUser.messId, role: { not: 'SUPERADMIN' } },
+      select: { id: true },
+    });
+
+    let finalMemberBills: Record<string, number> = {};
+    let calculatedTotal = 0;
+
+    if (memberBills && typeof memberBills === 'object') {
+      // Direct member bills map provided (custom adjustments)
+      finalMemberBills = memberBills;
+      calculatedTotal = Object.values(finalMemberBills).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+    } else {
+      // Per person amount specified
+      const pAmount = Number(perPersonAmount) || 0;
+      members.forEach((m) => {
+        finalMemberBills[m.id] = pAmount;
+      });
+      calculatedTotal = pAmount * members.length;
     }
+
+    // Allow explicit totalAmount override if provided, else use calculatedTotal
+    const finalTotal = totalAmount !== undefined && Number(totalAmount) > 0 ? Number(totalAmount) : calculatedTotal;
 
     const existingBill = await prisma.cookBill.findFirst({
       where: {
@@ -66,13 +86,13 @@ export async function POST(req: Request) {
     });
 
     let cookBill;
-    const memberBillsJson = typeof memberBills === 'string' ? memberBills : JSON.stringify(memberBills || {});
+    const memberBillsJson = JSON.stringify(finalMemberBills);
 
     if (existingBill) {
       cookBill = await prisma.cookBill.update({
         where: { id: existingBill.id },
         data: {
-          totalAmount: numericTotal,
+          totalAmount: finalTotal,
           memberBills: memberBillsJson,
         },
       });
@@ -81,7 +101,7 @@ export async function POST(req: Request) {
         data: {
           messId: currentUser.messId,
           month,
-          totalAmount: numericTotal,
+          totalAmount: finalTotal,
           memberBills: memberBillsJson,
         },
       });
