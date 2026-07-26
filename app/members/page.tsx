@@ -65,7 +65,10 @@ export default function MembersPage() {
     fetch('/api/members')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) setMembers(data);
+        if (Array.isArray(data)) {
+          setMembers(data);
+          if (data.length > 0 && !electUserId) setElectUserId(data[0].id);
+        }
       });
   };
 
