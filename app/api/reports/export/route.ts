@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { calculateMonthlySummary } from '@/lib/calculations';
-import { generateMonthlySummaryExcel } from '@/lib/excel';
+import { generateMonthlySummaryExcel, generateMealChartExcel } from '@/lib/excel';
 
 export async function GET(req: Request) {
   try {
@@ -12,6 +13,37 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
+    const type = searchParams.get('type');
+
+    if (type === 'meal-chart') {
+      const members = await prisma.user.findMany({
+        where: { messId: currentUser.messId, role: { not: 'SUPERADMIN' } },
+        select: { id: true, name: true, phone: true, role: true },
+        orderBy: { name: 'asc' },
+      });
+
+      const meals = await prisma.meal.findMany({
+        where: {
+          messId: currentUser.messId,
+          date: { startsWith: month },
+        },
+      });
+
+      const settings = await prisma.messSetting.findUnique({
+        where: { messId: currentUser.messId },
+      });
+
+      const excelBuffer = generateMealChartExcel(month, members, meals, settings);
+      const uint8Array = new Uint8Array(excelBuffer);
+
+      return new Response(uint8Array, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="Meal-Chart-${month}.xlsx"`,
+        },
+      });
+    }
 
     const summary = await calculateMonthlySummary(currentUser.messId, month);
     const excelBuffer = generateMonthlySummaryExcel(summary);
