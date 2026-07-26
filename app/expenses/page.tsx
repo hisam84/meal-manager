@@ -129,7 +129,7 @@ export default function ExpensesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save cook bill');
 
-      setCookBillMessage({ type: 'success', text: `${cookBillMonth} মাসের বুয়ার বিল (জনপ্রতি ৳${perPersonCookBill}) সফলভাবে সংরক্ষণ করা হয়েছে!` });
+      setCookBillMessage({ type: 'success', text: `${cookBillMonth} মাসের খালা বিল (জনপ্রতি ৳${perPersonCookBill}) সফলভাবে সংরক্ষণ করা হয়েছে!` });
       fetchCookBill(cookBillMonth);
     } catch (err: any) {
       setCookBillMessage({ type: 'error', text: err.message });
@@ -161,7 +161,7 @@ export default function ExpensesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save custom cook bills');
 
-      setCookBillMessage({ type: 'success', text: `${cookBillMonth} মাসের মেম্বার ভিত্তিক নিজস্ব বুয়ার বিল আপডেট করা হয়েছে!` });
+      setCookBillMessage({ type: 'success', text: `${cookBillMonth} মাসের মেম্বার ভিত্তিক নিজস্ব খালা বিল আপডেট করা হয়েছে!` });
       setCustomBillModalOpen(false);
       fetchCookBill(cookBillMonth);
     } catch (err: any) {
@@ -334,15 +334,15 @@ export default function ExpensesPage() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <ChefHat className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                    <span>ম্যানেজারের বুয়ার বিল (Cook Bill) নির্ধারণ</span>
+                    <span>ম্যানেজারের খালা বিল (Cook Bill) নির্ধারণ</span>
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    জনপ্রতি বুয়ার বিল যোগ করুন (মিলরেটে কোনো প্রভাব ফেলবে না)
+                    জনপ্রতি খালা বিল যোগ করুন (মিলরেটে কোনো প্রভাব ফেলবে না)
                   </p>
                 </div>
                 {currentCookBill && (
                   <span className="text-xs px-3 py-1 rounded-full font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 self-start sm:self-auto">
-                    মোট সদস্য বুয়ার বিল: ৳{currentCookBill.totalAmount.toLocaleString('bn-BD')}
+                    মোট সদস্য খালা বিল: ৳{currentCookBill.totalAmount.toLocaleString('bn-BD')}
                   </span>
                 )}
               </div>
@@ -379,7 +379,7 @@ export default function ExpensesPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    জনপ্রতি বুয়ার বিল (৳)
+                    জনপ্রতি খালা বিল (৳)
                   </label>
                   <input
                     type="number"
@@ -522,7 +522,7 @@ export default function ExpensesPage() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <ChefHat className="w-5 h-5 text-amber-500" />
-                <span>সদস্য অনুযায়ী বুয়ার বিল কাস্টমাইজ ({cookBillMonth})</span>
+                <span>সদস্য অনুযায়ী খালা বিল কাস্টমাইজ ({cookBillMonth})</span>
               </h3>
             </div>
 

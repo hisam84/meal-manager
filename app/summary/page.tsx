@@ -144,7 +144,7 @@ export default function SummaryPage() {
                     <th className="px-4 py-3">রাত</th>
                     <th className="px-4 py-3 font-semibold">মোট মিল</th>
                     <th className="px-4 py-3">মিল খরচ (৳)</th>
-                    <th className="px-4 py-3">বুয়ার বিল (৳)</th>
+                    <th className="px-4 py-3">খালা বিল (৳)</th>
                     <th className="px-4 py-3">মোট জমা (৳)</th>
                     <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
                     <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>

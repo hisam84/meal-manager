@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                  <span className="text-xs font-semibold uppercase">মোট বুয়ার বিল</span>
+                  <span className="text-xs font-semibold uppercase">মোট খালা বিল</span>
                   <ChefHat className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                 </div>
                 <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">আমার বুয়ার বিল</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">আমার খালা বিল</span>
                 <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
                   ৳{mySummary?.cookBill || 0}
                 </div>
