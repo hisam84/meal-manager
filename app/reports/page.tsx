@@ -57,9 +57,12 @@ export default function ReportsPage() {
       if (settingsData) setSettings(settingsData);
       if (Array.isArray(termsData)) {
         setManagerTerms(termsData);
-        // By default select current active term if ALL is selected
-        if (tId === 'ALL' && termsData.length > 0) {
-          setSelectedTermId(termsData[0].id);
+        if (termsData.length > 0) {
+          // If selectedTermId is 'ALL' or invalid, set to first term
+          const exists = termsData.some((t) => t.id === tId);
+          if (!exists || tId === 'ALL') {
+            setSelectedTermId(termsData[0].id);
+          }
         }
       }
       if (summaryData && !summaryData.error) setSummary(summaryData);
