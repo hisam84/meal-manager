@@ -235,24 +235,24 @@ export default function ReportsPage() {
               </form>
             </div>
 
-            {/* PDF / Print */}
+            {/* Member Summary Print Card */}
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
               <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                 <Printer className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">প্রিন্ট / PDF</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">হিসাব তালিকা প্রিন্ট</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ব্রাউজার দিয়ে দৈনিক মিল চার্ট বা রিপোর্ট PDF হিসেবে সেভ করুন
+                  মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা A4 ল্যান্ডস্কেপে প্রিন্ট করুন
                 </p>
               </div>
 
               <button
-                onClick={handlePrint}
+                onClick={() => router.push('/summary')}
                 className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 text-sm"
               >
                 <Printer className="w-4 h-4" />
-                <span>প্রিন্ট ভার্সন খুলুন</span>
+                <span>সামারি হিসাব প্রিন্ট</span>
               </button>
             </div>
           </div>
