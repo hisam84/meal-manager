@@ -257,6 +257,16 @@ export default function ReportsPage() {
                   সদস্যদের নাম (বাম কলাম) ➔ তারিখের সকল বেলা (সকাল/দুপুর/রাত) ➔ মোট মিল (ডান কলাম)
                 </p>
               </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrint}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>চার্ট প্রিন্ট করুন</span>
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

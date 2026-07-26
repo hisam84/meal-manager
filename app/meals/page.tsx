@@ -39,6 +39,8 @@ export default function MealsPage() {
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
+  const [managerTerms, setManagerTerms] = useState<any[]>([]);
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
@@ -50,11 +52,20 @@ export default function MealsPage() {
           fetchMembers();
           fetchSettings();
           fetchMeals(month);
+          fetchManagerTerms();
         }
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router, month]);
+
+  const fetchManagerTerms = () => {
+    fetch('/api/manager-terms')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setManagerTerms(data);
+      });
+  };
 
   const fetchSettings = () => {
     fetch('/api/settings')
@@ -93,8 +104,18 @@ export default function MealsPage() {
 
   // Calculate days in month
   const [yearStr, monthStr] = month.split('-');
-  const daysInMonth = new Date(Number(yearStr), Number(monthStr), 0).getDate();
-  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const totalDaysInMonth = new Date(Number(yearStr), Number(monthStr), 0).getDate();
+  const allDaysInMonth = Array.from({ length: totalDaysInMonth }, (_, i) => i + 1);
+
+  // Filter daysArray: only include days that fall within an elected manager term
+  // If no terms exist for the month, fall back to all days in month
+  const daysArray = allDaysInMonth.filter((day) => {
+    if (managerTerms.length === 0) return true; // fallback if no terms defined
+    const dayFormatted = day < 10 ? `0${day}` : `${day}`;
+    const targetDate = `${month}-${dayFormatted}`;
+
+    return managerTerms.some((term) => targetDate >= term.startDate && targetDate <= term.endDate);
+  });
 
   // Cell click handler
   const handleOpenCellModal = (member: any, day: number) => {
