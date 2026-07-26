@@ -330,19 +330,23 @@ export default function ReportsPage() {
                           const l = entry ? entry.lunch : 0;
                           const d = entry ? entry.dinner : 0;
 
-                          const dayTotal = (b * bw) + (l * lw) + (d * dw);
+                          const bVal = b * bw;
+                          const lVal = l * lw;
+                          const dVal = d * dw;
+
+                          const dayTotal = bVal + lVal + dVal;
                           memberTotalMeals += dayTotal;
 
                           return (
                             <Fragment key={day}>
                               <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                                {b > 0 ? b : '-'}
+                                {bVal > 0 ? bVal : '-'}
                               </td>
                               <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                                {l > 0 ? l : '-'}
+                                {lVal > 0 ? lVal : '-'}
                               </td>
                               <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
-                                {d > 0 ? d : '-'}
+                                {dVal > 0 ? dVal : '-'}
                               </td>
                             </Fragment>
                           );

@@ -105,11 +105,15 @@ export function generateMealChartExcel(
       const l = entry ? entry.lunch : 0;
       const d = entry ? entry.dinner : 0;
 
-      memberRow.push(b > 0 ? b : 0);
-      memberRow.push(l > 0 ? l : 0);
-      memberRow.push(d > 0 ? d : 0);
+      const bVal = b * bw;
+      const lVal = l * lw;
+      const dVal = d * dw;
 
-      const dayTotal = (b * bw) + (l * lw) + (d * dw);
+      memberRow.push(bVal > 0 ? bVal : 0);
+      memberRow.push(lVal > 0 ? lVal : 0);
+      memberRow.push(dVal > 0 ? dVal : 0);
+
+      const dayTotal = bVal + lVal + dVal;
       memberTotalMeals += dayTotal;
     });
 
