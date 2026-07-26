@@ -258,11 +258,11 @@ export default function ReportsPage() {
           </div>
 
           {/* Live Daily Meal Chart Matrix Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
+          <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5 text-sky-600" />
+                  <FileSpreadsheet className="w-5 h-5 text-sky-600 no-print" />
                   <span>দৈনিক বেলাভিত্তিক মেস মিল চার্ট রিপোর্ট ({month})</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -270,7 +270,7 @@ export default function ReportsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 no-print">
                 <button
                   onClick={handlePrint}
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
