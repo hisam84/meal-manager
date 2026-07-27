@@ -65,6 +65,9 @@ export default function DashboardPage() {
 
   const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
   const mySummary = summary?.memberSummaries?.find((m: any) => m.userId === user?.id);
+  const displayMemberSummaries = isAdminOrManager
+    ? summary?.memberSummaries
+    : summary?.memberSummaries?.filter((m: any) => m.userId === user?.id);
 
   return (
     <PageShell user={user} onLogout={handleLogout} title="ড্যাশবোর্ড">
@@ -287,7 +290,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {summary?.memberSummaries?.map((m: any) => (
+                  {displayMemberSummaries?.map((m: any) => (
                     <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                         {m.name}
