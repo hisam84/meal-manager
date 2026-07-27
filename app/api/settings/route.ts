@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     const mdt = ['NONE', 'ALL', 'FIXED'].includes(managerDeductionType) ? managerDeductionType : 'NONE';
     const mda = mdt === 'FIXED' ? Math.max(0, Number(managerDeductionAmount) || 0) : 0;
 
-    const settings = await prisma.messSetting.upsert({
+    const settings = await (prisma.messSetting as any).upsert({
       where: { messId: currentUser.messId },
       update: {
         breakfastWeight: bw,

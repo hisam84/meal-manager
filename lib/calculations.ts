@@ -47,7 +47,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   let termMealDeductionAmount: number = 0;
 
   // Fetch MessSetting for default deduction settings
-  const messSettings = await prisma.messSetting.findUnique({ where: { messId } });
+  const messSettings: any = await prisma.messSetting.findUnique({ where: { messId } });
   let globalDeductionType = messSettings?.managerDeductionType || 'NONE';
   let globalDeductionAmount = messSettings?.managerDeductionAmount || 0;
 
