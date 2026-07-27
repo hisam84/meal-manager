@@ -42,11 +42,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Only Admins and Managers can update meal settings' }, { status: 403 });
     }
 
-    const { breakfastWeight, lunchWeight, dinnerWeight } = await req.json();
+    const { breakfastWeight, lunchWeight, dinnerWeight, managerDeductionType, managerDeductionAmount } = await req.json();
 
     const bw = Math.max(0, Number(breakfastWeight) || 0);
     const lw = Math.max(0, Number(lunchWeight) || 0);
     const dw = Math.max(0, Number(dinnerWeight) || 0);
+    const mdt = ['NONE', 'ALL', 'FIXED'].includes(managerDeductionType) ? managerDeductionType : 'NONE';
+    const mda = mdt === 'FIXED' ? Math.max(0, Number(managerDeductionAmount) || 0) : 0;
 
     const settings = await prisma.messSetting.upsert({
       where: { messId: currentUser.messId },
@@ -54,12 +56,16 @@ export async function POST(req: Request) {
         breakfastWeight: bw,
         lunchWeight: lw,
         dinnerWeight: dw,
+        managerDeductionType: mdt,
+        managerDeductionAmount: mda,
       },
       create: {
         messId: currentUser.messId,
         breakfastWeight: bw,
         lunchWeight: lw,
         dinnerWeight: dw,
+        managerDeductionType: mdt,
+        managerDeductionAmount: mda,
       },
     });
 

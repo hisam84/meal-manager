@@ -46,14 +46,34 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   let termMealDeductionType: string = 'NONE';
   let termMealDeductionAmount: number = 0;
 
+  // Fetch MessSetting for default deduction settings
+  const messSettings = await prisma.messSetting.findUnique({ where: { messId } });
+  let globalDeductionType = messSettings?.managerDeductionType || 'NONE';
+  let globalDeductionAmount = messSettings?.managerDeductionAmount || 0;
+
   if (termId) {
     const termObj = await prisma.managerTerm.findUnique({ where: { id: termId } });
     if (termObj) {
       termStartDate = termObj.startDate;
       termEndDate = termObj.endDate;
       termManagerUserId = termObj.userId ?? null;
-      termMealDeductionType = termObj.mealDeductionType ?? 'NONE';
-      termMealDeductionAmount = termObj.mealDeductionAmount ?? 0;
+      termMealDeductionType = termObj.mealDeductionType && termObj.mealDeductionType !== 'NONE' 
+        ? termObj.mealDeductionType 
+        : globalDeductionType;
+      termMealDeductionAmount = termObj.mealDeductionType && termObj.mealDeductionType !== 'NONE'
+        ? (termObj.mealDeductionAmount ?? 0)
+        : globalDeductionAmount;
+    }
+  } else {
+    termMealDeductionType = globalDeductionType;
+    termMealDeductionAmount = globalDeductionAmount;
+    // Find active manager user if no term specified
+    const activeTerm = await prisma.managerTerm.findFirst({
+      where: { messId, status: 'ACTIVE' },
+      orderBy: { startDate: 'desc' }
+    });
+    if (activeTerm) {
+      termManagerUserId = activeTerm.userId;
     }
   }
 

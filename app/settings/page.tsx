@@ -14,6 +14,8 @@ export default function SettingsPage() {
   const [breakfastWeight, setBreakfastWeight] = useState(1.0);
   const [lunchWeight, setLunchWeight] = useState(1.0);
   const [dinnerWeight, setDinnerWeight] = useState(1.0);
+  const [managerDeductionType, setManagerDeductionType] = useState('NONE');
+  const [managerDeductionAmount, setManagerDeductionAmount] = useState(0);
   const [settingsMessage, setSettingsMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -45,6 +47,8 @@ export default function SettingsPage() {
           setBreakfastWeight(data.breakfastWeight ?? 1.0);
           setLunchWeight(data.lunchWeight ?? 1.0);
           setDinnerWeight(data.dinnerWeight ?? 1.0);
+          setManagerDeductionType(data.managerDeductionType ?? 'NONE');
+          setManagerDeductionAmount(data.managerDeductionAmount ?? 0);
         }
       });
   };
@@ -67,6 +71,8 @@ export default function SettingsPage() {
           breakfastWeight,
           lunchWeight,
           dinnerWeight,
+          managerDeductionType,
+          managerDeductionAmount,
         }),
       });
 
@@ -208,6 +214,52 @@ export default function SettingsPage() {
                   className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-sky-600 dark:text-sky-400"
                 />
                 <p className="text-[11px] text-slate-400">উদাঃ ১টি রাতের খাবার = {dinnerWeight} টি মিল</p>
+              </div>
+
+              {/* Manager Meal Deduction Settings Card Section inside Form */}
+              <div className="sm:col-span-3 bg-amber-500/10 border border-amber-500/30 p-5 rounded-2xl space-y-3 mt-2">
+                <div>
+                  <h3 className="text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                    ম্যানেজারের মিল মাইনাস সেটিংস (Manager Meal Deduction)
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    মেসের মোট হিসাব থেকে ম্যানেজারের নির্দিষ্ট পরিমাণ বা সকল মিল মাইনাস করা হবে। এতে মিলরেট ও ম্যানেজারের বিল সমন্বয় হবে।
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      মাইনাসের ধরণ সিলেক্ট করুন
+                    </label>
+                    <select
+                      value={managerDeductionType}
+                      onChange={(e) => setManagerDeductionType(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/80 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 dark:text-white"
+                    >
+                      <option value="NONE">কোনো মাইনাস নেই (ডিফল্ট)</option>
+                      <option value="ALL">সব মিল মাইনাস (ম্যানেজারের পুরো মিল বাদ)</option>
+                      <option value="FIXED">নির্দিষ্ট পরিমাণ মিল মাইনাস (Fixed Amount)</option>
+                    </select>
+                  </div>
+
+                  {managerDeductionType === 'FIXED' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        কত মিল মাইনাস করতে চান? (সংখ্যা)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        value={managerDeductionAmount}
+                        onChange={(e) => setManagerDeductionAmount(Number(e.target.value))}
+                        className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/80 rounded-xl px-3 py-2 text-sm font-bold text-amber-600 dark:text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="উদাঃ ১৫"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="sm:col-span-3 flex justify-end pt-2">
