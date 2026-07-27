@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Phone, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Phone, Lock, LogIn, AlertCircle, Clock } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [expiredMsg, setExpiredMsg] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('expired') === '1') {
+      setExpiredMsg(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +55,13 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold tracking-tight">মেস মিল ট্র্যাকার</h1>
           <p className="text-sm text-slate-300">আপনার ফোন নম্বর ও পাসওয়ার্ড দিয়ে লগইন করুন</p>
         </div>
+
+        {expiredMsg && (
+          <div className="p-3.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-200 text-xs flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>নিষ্ক্রিয়তার (১০ মিনিট ইনঅ্যাক্টিভিটি) কারণে আপনার সেশন সমাপ্ত হয়েছে। অনুগ্রহ করে আবার লগইন করুন।</span>
+          </div>
+        )}
 
         {error && (
           <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-200 text-sm flex items-center gap-2">
