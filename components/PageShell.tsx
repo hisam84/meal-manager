@@ -38,7 +38,7 @@ export default function PageShell({ user, onLogout, title, children }: PageShell
           <p className="flex items-center justify-center gap-1.5 font-medium">
             <span>Developed by:</span>
             <a
-              href="https://deluxe-klepon-0a1068.netlify.app/"
+              href="https://hisam-omega.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300 transition-colors underline decoration-sky-500/30 underline-offset-4"
