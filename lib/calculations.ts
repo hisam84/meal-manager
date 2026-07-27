@@ -11,6 +11,13 @@ export interface MonthlySummaryResult {
   totalReceivable: number;
   totalPayable: number;
   managerMealDeduction: number; // meals deducted from total for rate calculation
+  todayMealSummary?: {
+    date: string;
+    totalBreakfast: number;
+    totalLunch: number;
+    totalDinner: number;
+    totalMealToday: number;
+  };
   currentManager?: {
     name: string;
     phone: string;
@@ -261,6 +268,36 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     }
   }
 
+  // Today's per-meal breakdown for Dashboard display
+  const todayMeals = await prisma.meal.findMany({
+    where: {
+      messId,
+      date: todayStr,
+    },
+  });
+
+  const bWeight = messSettings?.breakfastWeight ?? 1.0;
+  const lWeight = messSettings?.lunchWeight ?? 1.0;
+  const dWeight = messSettings?.dinnerWeight ?? 1.0;
+
+  let todayB = 0;
+  let todayL = 0;
+  let todayD = 0;
+
+  todayMeals.forEach((m: any) => {
+    todayB += (m.breakfast || 0) * bWeight;
+    todayL += (m.lunch || 0) * lWeight;
+    todayD += (m.dinner || 0) * dWeight;
+  });
+
+  const todayMealSummary = {
+    date: todayStr,
+    totalBreakfast: Number(todayB.toFixed(2)),
+    totalLunch: Number(todayL.toFixed(2)),
+    totalDinner: Number(todayD.toFixed(2)),
+    totalMealToday: Number((todayB + todayL + todayD).toFixed(2)),
+  };
+
   return {
     month,
     totalMembers: users.length,
@@ -272,6 +309,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalReceivable: Number(totalReceivable.toFixed(2)),
     totalPayable: Number(totalPayable.toFixed(2)),
     managerMealDeduction: Number(managerMealDeduction.toFixed(2)),
+    todayMealSummary,
     currentManager,
     memberSummaries,
   };

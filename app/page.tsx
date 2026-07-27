@@ -16,6 +16,10 @@ import {
   ChefHat,
   Phone,
   UserCheck,
+  Coffee,
+  Sun,
+  Moon,
+  CalendarDays,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -130,6 +134,71 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Today's Per-Meal Breakdown Card */}
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                  <span>আজকের দৈনিক প্রতিবেলার মিলের তথ্য</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  আজকের তারিখ: <span className="font-semibold text-slate-900 dark:text-white">{summary?.todayMealSummary?.date || new Date().toISOString().slice(0, 10)}</span> (মেসের সদস্যদের মোট মিল)
+                </p>
+              </div>
+              <span className="text-xs font-extrabold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
+                আজকের সর্বমোট: {summary?.todayMealSummary?.totalMealToday || 0} টি মিল
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              {/* Breakfast Card */}
+              <div className="bg-sky-50/70 dark:bg-sky-950/40 p-4 rounded-xl border border-sky-200/70 dark:border-sky-900/60 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider block">
+                    সকালের নাস্তা
+                  </span>
+                  <div className="text-xl font-extrabold text-slate-900 dark:text-white">
+                    {summary?.todayMealSummary?.totalBreakfast || 0} <span className="text-xs font-semibold text-slate-500">টি মিল</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-md shadow-sky-600/30">
+                  <Coffee className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Lunch Card */}
+              <div className="bg-amber-50/70 dark:bg-amber-950/40 p-4 rounded-xl border border-amber-200/70 dark:border-amber-900/60 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">
+                    দুপুরের খাবার
+                  </span>
+                  <div className="text-xl font-extrabold text-slate-900 dark:text-white">
+                    {summary?.todayMealSummary?.totalLunch || 0} <span className="text-xs font-semibold text-slate-500">টি মিল</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-600/30">
+                  <Sun className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Dinner Card */}
+              <div className="bg-purple-50/70 dark:bg-purple-950/40 p-4 rounded-xl border border-purple-200/70 dark:border-purple-900/60 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">
+                    রাতের খাবার
+                  </span>
+                  <div className="text-xl font-extrabold text-slate-900 dark:text-white">
+                    {summary?.todayMealSummary?.totalDinner || 0} <span className="text-xs font-semibold text-slate-500">টি মিল</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/30">
+                  <Moon className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Admin / Manager KPI Grid */}
           {isAdminOrManager ? (
