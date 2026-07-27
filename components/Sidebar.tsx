@@ -86,9 +86,11 @@ export default function Sidebar({ user, onLogout, mobileOpen, onClose }: Sidebar
             </div>
             <div>
               <h1 className="font-bold text-slate-900 dark:text-white text-base leading-tight">মেস মিল ট্র্যাকার</h1>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {isSuperAdmin ? 'Super Admin Console' : 'PostgreSQL & Next.js'}
-              </span>
+              {isSuperAdmin && (
+                <span className="text-xs text-sky-600 dark:text-sky-400 font-semibold">
+                  Super Admin Console
+                </span>
+              )}
             </div>
           </div>
 

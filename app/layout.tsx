@@ -3,7 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'মেস মিল ট্র্যাকার — Mess Meal Tracker',
-  description: 'Next.js 14, TypeScript & PostgreSQL with Prisma ORM powered Mess Meal Tracking Web App',
+  description: 'স্মার্ট মেস মিল ট্র্যাকিং ও হিসাব বিবরণী ওয়েব অ্যাপ',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
