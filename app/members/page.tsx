@@ -57,7 +57,7 @@ export default function MembersPage() {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
-        if (!data.authenticated || (data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN')) {
+        if (!data.authenticated || (data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN' && data.user.role !== 'MANAGER')) {
           router.push('/');
         } else {
           setUser(data.user);

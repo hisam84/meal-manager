@@ -119,14 +119,6 @@ export default function MealsPage() {
 
   // Cell click handler
   const handleOpenCellModal = (member: any, day: number) => {
-    if (!isAdminOrManager) {
-      setMessage({
-        type: 'error',
-        text: 'সাধারণ মেম্বারগণ মিল পরিবর্তন করতে পারবেন না। মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।',
-      });
-      return;
-    }
-
     const dayFormatted = day < 10 ? `0${day}` : `${day}`;
     const targetDate = `${month}-${dayFormatted}`;
 
@@ -322,11 +314,7 @@ export default function MealsPage() {
                             <td
                               key={day}
                               onClick={() => handleOpenCellModal(member, day)}
-                              className={`px-1 py-2 border-r border-slate-200 dark:border-slate-800 transition-all ${
-                                isAdminOrManager
-                                  ? 'cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-900/60'
-                                  : 'cursor-default'
-                              } ${
+                              className={`px-1 py-2 border-r border-slate-200 dark:border-slate-800 transition-all cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-900/60 ${
                                 isFutureDate
                                   ? 'bg-slate-50/40 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 italic'
                                   : hasEntry && totalVal > 0
@@ -357,15 +345,15 @@ export default function MealsPage() {
           </div>
     </PageShell>
 
-      {/* Excel Sheet Per-Meal Time Config Modal (Admin & Manager Only) */}
-      {selectedCell && isAdminOrManager && (
+      {/* Excel Sheet Per-Meal Time Config Modal */}
+      {selectedCell && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-xl w-full space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-sky-600" />
-                  <span>বেলাভিত্তিক মিল সেটিংস & ইনপুট</span>
+                  <span>{isAdminOrManager ? 'বেলাভিত্তিক মিল সেটিংস & ইনপুট' : 'দৈনিক মিলের বিস্তারিত স্ট্যাটাস'}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   মেম্বার: <span className="font-bold text-slate-900 dark:text-white">{selectedCell.member.name}</span> | নির্বাচন তারিখ: <span className="font-bold text-sky-600">{selectedCell.date}</span>
@@ -380,7 +368,64 @@ export default function MealsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveMealEntry} className="space-y-4">
+            {!isAdminOrManager ? (
+              /* Read-Only View for General Members */
+              <div className="space-y-4">
+                <div className="p-3.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2 border border-slate-200 dark:border-slate-700">
+                  <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>আপনি সাধারণ মেম্বার হিসেবে দেখছেন (Read-Only View)। মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/60 space-y-1">
+                    <span className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase">সকালের নাস্তা</span>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {(breakfastMode === 'OFF' || breakfastMode === 'OFF_ONCE') ? 'বন্ধ (০)' : `${bVal} টি মিল (${bVal * bw} পয়েন্ট)`}
+                    </p>
+                    <span className="text-[11px] text-slate-500 font-medium block">মোড: {breakfastMode === 'DAILY' ? 'প্রতিদিন' : breakfastMode === 'ONCE' ? 'একদিন' : 'বন্ধ'}</span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-1">
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase">দুপুরের খাবার</span>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {(lunchMode === 'OFF' || lunchMode === 'OFF_ONCE') ? 'বন্ধ (০)' : `${lVal} টি মিল (${lVal * lw} পয়েন্ট)`}
+                    </p>
+                    <span className="text-[11px] text-slate-500 font-medium block">মোড: {lunchMode === 'DAILY' ? 'প্রতিদিন' : lunchMode === 'ONCE' ? 'একদিন' : 'বন্ধ'}</span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 space-y-1">
+                    <span className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase">রাতের খাবার</span>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {(dinnerMode === 'OFF' || dinnerMode === 'OFF_ONCE') ? 'বন্ধ (০)' : `${dVal} টি মিল (${dVal * dw} পয়েন্ট)`}
+                    </p>
+                    <span className="text-[11px] text-slate-500 font-medium block">মোড: {dinnerMode === 'DAILY' ? 'প্রতিদিন' : dinnerMode === 'ONCE' ? 'একদিন' : 'বন্ধ'}</span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">মোট গণনাকৃত পয়েন্ট:</span>
+                  <span className="text-base font-extrabold text-sky-600 dark:text-sky-400">{modalCalculatedTotal} টি মিল</span>
+                </div>
+
+                {note && (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                    <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1">বিশেষ নোট:</span>
+                    <p className="text-slate-600 dark:text-slate-400 italic">{note}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCell(null)}
+                    className="px-5 py-2 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 font-semibold rounded-xl text-xs transition-all"
+                  >
+                    বন্ধ করুন
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveMealEntry} className="space-y-4">
               {/* Breakfast Config */}
               <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
                 <div className="flex justify-between items-center">
@@ -626,6 +671,7 @@ export default function MealsPage() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

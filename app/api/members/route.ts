@@ -37,8 +37,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only Admins can add new members' }, { status: 403 });
+    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
+      return NextResponse.json({ error: 'Only Admins and Managers can add new members' }, { status: 403 });
     }
 
     const { name, phone, email, password, role } = await req.json();
@@ -83,8 +83,8 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only Admins can update member roles or status' }, { status: 403 });
+    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
+      return NextResponse.json({ error: 'Only Admins and Managers can update member roles or status' }, { status: 403 });
     }
 
     const { id, name, phone, role, active, password } = await req.json();
@@ -143,8 +143,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only Admins can delete members' }, { status: 403 });
+    if (currentUser.role !== 'SUPERADMIN' && currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER') {
+      return NextResponse.json({ error: 'Only Admins and Managers can delete members' }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);
