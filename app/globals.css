@@ -54,7 +54,7 @@ html {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 15mm 15mm 15mm 15mm;
+    margin: 10mm;
   }
 
   body {
@@ -77,17 +77,34 @@ html {
     visibility: visible;
   }
 
-  .print-section {
+  /* Print Wrapper to contain all sections in natural block flow */
+  .print-container {
     position: absolute;
     left: 0;
     top: 0;
     width: 100% !important;
-    box-sizing: border-box !important;
     margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-section {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 20px 0 !important;
     padding: 10px 5px !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Force page break between consecutive print sections if needed */
+  .print-section + .print-section {
+    page-break-before: always;
+    break-before: page;
   }
 
   /* Hide buttons or action items inside print-section during print */
@@ -99,14 +116,14 @@ html {
   .print-section table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 8.5pt !important;
+    font-size: 8pt !important;
     margin-top: 8px !important;
   }
 
   .print-section th,
   .print-section td {
-    border: 1px solid #64748b !important;
-    padding: 5px 6px !important;
+    border: 1px solid #475569 !important;
+    padding: 4px 5px !important;
     color: #000000 !important;
     background: #ffffff !important;
   }

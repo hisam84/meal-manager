@@ -191,197 +191,200 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Live Daily Meal Chart Matrix Table */}
-          <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5 text-sky-600 no-print" />
-                  <span>দৈনিক বেলাভিত্তিক মেস মিল চার্ট রিপোর্ট ({month})</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  সদস্যদের নাম (বাম কলাম) ➔ তারিখের সকল বেলা (সকাল/দুপুর/রাত) ➔ মোট মিল (ডান কলাম)
-                </p>
+          {/* Printable Reports Container */}
+          <div className="print-container space-y-6">
+            {/* Live Daily Meal Chart Matrix Table */}
+            <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileSpreadsheet className="w-5 h-5 text-sky-600 no-print" />
+                    <span>দৈনিক বেলাভিত্তিক মেস মিল চার্ট রিপোর্ট ({month})</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    সদস্যদের নাম (বাম কলাম) ➔ তারিখের সকল বেলা (সকাল/দুপুর/রাত) ➔ মোট মিল (ডান কলাম)
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 no-print">
+                  <button
+                    onClick={handlePrint}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>চার্ট প্রিন্ট করুন</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 no-print">
+              <div className="overflow-x-auto">
+                <table className="w-full text-center text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                      <th className="px-3 py-2 text-left sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700">
+                        সদস্যের নাম
+                      </th>
+                      {daysArray.map((day) => (
+                        <th key={day} colSpan={3} className="px-2 py-1.5 border-r border-slate-200 dark:border-slate-700">
+                          {day}
+                        </th>
+                      ))}
+                      <th className="px-3 py-2 sticky right-0 bg-slate-100 dark:bg-slate-800 z-10 border-l border-slate-200 dark:border-slate-700">
+                        মোট মিল
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[10px] font-semibold border-b border-slate-200 dark:border-slate-700">
+                      <th className="px-3 py-1.5 text-left sticky left-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
+                        বেলা ➔
+                      </th>
+                      {daysArray.map((day) => (
+                        <Fragment key={day}>
+                          <th className="px-1 py-1 bg-sky-50/50 dark:bg-sky-950/20 text-sky-600">স</th>
+                          <th className="px-1 py-1 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600">দু</th>
+                          <th className="px-1 py-1 bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 border-r border-slate-200 dark:border-slate-700">রা</th>
+                        </Fragment>
+                      ))}
+                      <th className="px-3 py-1.5 sticky right-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-l border-slate-200 dark:border-slate-700">
+                        মোট
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {members.map((m) => {
+                      let memberTotalMeals = 0;
+                      return (
+                        <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                          <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800">
+                            {m.name}
+                          </td>
+                          {daysArray.map((day) => {
+                            const dayStr = day < 10 ? `0${day}` : `${day}`;
+                            const dateStr = `${month}-${dayStr}`;
+                            const entry = mealMap[`${m.id}_${dateStr}`];
+
+                            const b = entry ? entry.breakfast : 0;
+                            const l = entry ? entry.lunch : 0;
+                            const d = entry ? entry.dinner : 0;
+
+                            const bVal = b * bw;
+                            const lVal = l * lw;
+                            const dVal = d * dw;
+
+                            const dayTotal = bVal + lVal + dVal;
+                            memberTotalMeals += dayTotal;
+
+                            return (
+                              <Fragment key={day}>
+                                <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
+                                  {bVal > 0 ? bVal : '-'}
+                                </td>
+                                <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
+                                  {lVal > 0 ? lVal : '-'}
+                                </td>
+                                <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
+                                  {dVal > 0 ? dVal : '-'}
+                                </td>
+                              </Fragment>
+                            );
+                          })}
+                          <td className="px-3 py-2 font-extrabold text-sky-600 dark:text-sky-400 sticky right-0 bg-white dark:bg-slate-900 z-10 border-l border-slate-200 dark:border-slate-800">
+                            {Number(memberTotalMeals.toFixed(2))}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Member Detailed Summary Breakdown Table */}
+            <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা ({month})</h3>
                 <button
                   onClick={handlePrint}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
+                  className="no-print px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>চার্ট প্রিন্ট করুন</span>
+                  <span>প্রিন্ট করুন</span>
                 </button>
               </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-center text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
-                    <th className="px-3 py-2 text-left sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700">
-                      সদস্যের নাম
-                    </th>
-                    {daysArray.map((day) => (
-                      <th key={day} colSpan={3} className="px-2 py-1.5 border-r border-slate-200 dark:border-slate-700">
-                        {day}
-                      </th>
-                    ))}
-                    <th className="px-3 py-2 sticky right-0 bg-slate-100 dark:bg-slate-800 z-10 border-l border-slate-200 dark:border-slate-700">
-                      মোট মিল
-                    </th>
-                  </tr>
-                  <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[10px] font-semibold border-b border-slate-200 dark:border-slate-700">
-                    <th className="px-3 py-1.5 text-left sticky left-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
-                      বেলা ➔
-                    </th>
-                    {daysArray.map((day) => (
-                      <Fragment key={day}>
-                        <th className="px-1 py-1 bg-sky-50/50 dark:bg-sky-950/20 text-sky-600">স</th>
-                        <th className="px-1 py-1 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600">দু</th>
-                        <th className="px-1 py-1 bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 border-r border-slate-200 dark:border-slate-700">রা</th>
-                      </Fragment>
-                    ))}
-                    <th className="px-3 py-1.5 sticky right-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-l border-slate-200 dark:border-slate-700">
-                      মোট
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {members.map((m) => {
-                    let memberTotalMeals = 0;
-                    return (
-                      <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                        <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800">
-                          {m.name}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
+                    <tr>
+                      <th className="px-4 py-3 rounded-l-lg">মেম্বার নাম</th>
+                      <th className="px-4 py-3">ফোন</th>
+                      <th className="px-4 py-3">সকাল</th>
+                      <th className="px-4 py-3">দুপুর</th>
+                      <th className="px-4 py-3">রাত</th>
+                      <th className="px-4 py-3 font-semibold">মোট মিল</th>
+                      <th className="px-4 py-3">বিলযোগ্য মিল</th>
+                      <th className="px-4 py-3">মিল খরচ (৳)</th>
+                      <th className="px-4 py-3">খালা বিল (৳)</th>
+                      <th className="px-4 py-3">মোট জমা (৳)</th>
+                      <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
+                      <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {summary?.memberSummaries?.map((m: any) => (
+                      <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
+                        <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.breakfast}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.lunch}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.dinner}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{m.totalMeals}</td>
+                        <td className="px-4 py-3">
+                          {m.billableMeals !== undefined && m.billableMeals !== m.totalMeals ? (
+                            <span className="font-semibold text-amber-600 dark:text-amber-400">
+                              {m.billableMeals}
+                              <span className="text-[10px] ml-1 text-slate-400">({m.totalMeals - m.billableMeals} মাইনাস)</span>
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-slate-600 dark:text-slate-400">{m.billableMeals ?? m.totalMeals}</span>
+                          )}
                         </td>
-                        {daysArray.map((day) => {
-                          const dayStr = day < 10 ? `0${day}` : `${day}`;
-                          const dateStr = `${month}-${dayStr}`;
-                          const entry = mealMap[`${m.id}_${dateStr}`];
-
-                          const b = entry ? entry.breakfast : 0;
-                          const l = entry ? entry.lunch : 0;
-                          const d = entry ? entry.dinner : 0;
-
-                          const bVal = b * bw;
-                          const lVal = l * lw;
-                          const dVal = d * dw;
-
-                          const dayTotal = bVal + lVal + dVal;
-                          memberTotalMeals += dayTotal;
-
-                          return (
-                            <Fragment key={day}>
-                              <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                                {bVal > 0 ? bVal : '-'}
-                              </td>
-                              <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                                {lVal > 0 ? lVal : '-'}
-                              </td>
-                              <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
-                                {dVal > 0 ? dVal : '-'}
-                              </td>
-                            </Fragment>
-                          );
-                        })}
-                        <td className="px-3 py-2 font-extrabold text-sky-600 dark:text-sky-400 sticky right-0 bg-white dark:bg-slate-900 z-10 border-l border-slate-200 dark:border-slate-800">
-                          {Number(memberTotalMeals.toFixed(2))}
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
+                        <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
+                        <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
+                        <td className={`px-4 py-3 font-extrabold ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          ৳{m.balance}
+                        </td>
+                        <td className="px-4 py-3">
+                          {m.status === 'Receivable' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                              পাওনা
+                            </span>
+                          )}
+                          {m.status === 'Payable' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                              দেনা
+                            </span>
+                          )}
+                          {m.status === 'Settled' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              পরিশোধিত
+                            </span>
+                          )}
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Member Detailed Summary Breakdown Table */}
-          <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা ({month})</h3>
-              <button
-                onClick={handlePrint}
-                className="no-print px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
-              >
-                <Printer className="w-4 h-4" />
-                <span>প্রিন্ট করুন</span>
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
-                  <tr>
-                    <th className="px-4 py-3 rounded-l-lg">মেম্বার নাম</th>
-                    <th className="px-4 py-3">ফোন</th>
-                    <th className="px-4 py-3">সকাল</th>
-                    <th className="px-4 py-3">দুপুর</th>
-                    <th className="px-4 py-3">রাত</th>
-                    <th className="px-4 py-3 font-semibold">মোট মিল</th>
-                    <th className="px-4 py-3">বিলযোগ্য মিল</th>
-                    <th className="px-4 py-3">মিল খরচ (৳)</th>
-                    <th className="px-4 py-3">খালা বিল (৳)</th>
-                    <th className="px-4 py-3">মোট জমা (৳)</th>
-                    <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
-                    <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {summary?.memberSummaries?.map((m: any) => (
-                    <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.breakfast}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.lunch}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.dinner}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{m.totalMeals}</td>
-                      <td className="px-4 py-3">
-                        {m.billableMeals !== undefined && m.billableMeals !== m.totalMeals ? (
-                          <span className="font-semibold text-amber-600 dark:text-amber-400">
-                            {m.billableMeals}
-                            <span className="text-[10px] ml-1 text-slate-400">({m.totalMeals - m.billableMeals} মাইনাস)</span>
-                          </span>
-                        ) : (
-                          <span className="font-semibold text-slate-600 dark:text-slate-400">{m.billableMeals ?? m.totalMeals}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
-                      <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
-                      <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
-                      <td className={`px-4 py-3 font-extrabold ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        ৳{m.balance}
-                      </td>
-                      <td className="px-4 py-3">
-                        {m.status === 'Receivable' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                            পাওনা
-                          </span>
-                        )}
-                        {m.status === 'Payable' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
-                            দেনা
-                          </span>
-                        )}
-                        {m.status === 'Settled' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            পরিশোধিত
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Manager Meal Deduction Notice */}
-            {summary?.managerMealDeduction > 0 && (
-              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
-                <span className="font-bold">⚠ ম্যানেজার মিল মাইনাস:</span>
-                <span>এই টার্মে ম্যানেজারের <strong>{summary.managerMealDeduction}</strong> মিল মোট মিল থেকে বাদ দিয়ে মিলরেট ও ম্যানেজারের বিল হিসাব করা হয়েছে। মিলের রেকর্ড অপরিবর্তিত।</span>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              {/* Manager Meal Deduction Notice */}
+              {summary?.managerMealDeduction > 0 && (
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                  <span className="font-bold">⚠ ম্যানেজার মিল মাইনাস:</span>
+                  <span>এই টার্মে ম্যানেজারের <strong>{summary.managerMealDeduction}</strong> মিল মোট মিল থেকে বাদ দিয়ে মিলরেট ও ম্যানেজারের বিল হিসাব করা হয়েছে। মিলের রেকর্ড অপরিবর্তিত।</span>
+                </div>
+              )}
+            </div>
           </div>
     </PageShell>
   );
