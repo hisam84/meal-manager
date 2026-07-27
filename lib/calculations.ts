@@ -11,6 +11,13 @@ export interface MonthlySummaryResult {
   totalReceivable: number;
   totalPayable: number;
   managerMealDeduction: number; // meals deducted from total for rate calculation
+  currentManager?: {
+    name: string;
+    phone: string;
+    title?: string;
+    startDate?: string;
+    endDate?: string;
+  } | null;
   memberSummaries: {
     userId: string;
     name: string;
@@ -207,6 +214,53 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     };
   });
 
+  // Find current active manager details for dashboard display
+  let currentManager: { name: string; phone: string; title?: string; startDate?: string; endDate?: string } | null = null;
+  
+  let activeTermObj = null;
+  if (termId) {
+    activeTermObj = await prisma.managerTerm.findUnique({
+      where: { id: termId },
+      include: { user: { select: { name: true, phone: true } } },
+    });
+  } else {
+    activeTermObj = await prisma.managerTerm.findFirst({
+      where: {
+        messId,
+        startDate: { lte: todayStr },
+        endDate: { gte: todayStr },
+      },
+      include: { user: { select: { name: true, phone: true } } },
+      orderBy: { startDate: 'desc' },
+    });
+
+    if (!activeTermObj) {
+      activeTermObj = await prisma.managerTerm.findFirst({
+        where: { messId },
+        include: { user: { select: { name: true, phone: true } } },
+        orderBy: { startDate: 'desc' },
+      });
+    }
+  }
+
+  if (activeTermObj && activeTermObj.user) {
+    currentManager = {
+      name: activeTermObj.user.name,
+      phone: activeTermObj.user.phone,
+      title: activeTermObj.title || undefined,
+      startDate: activeTermObj.startDate,
+      endDate: activeTermObj.endDate,
+    };
+  } else {
+    const managerRoleUser = users.find((u) => u.role === 'MANAGER');
+    if (managerRoleUser) {
+      currentManager = {
+        name: managerRoleUser.name,
+        phone: managerRoleUser.phone,
+      };
+    }
+  }
+
   return {
     month,
     totalMembers: users.length,
@@ -218,6 +272,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalReceivable: Number(totalReceivable.toFixed(2)),
     totalPayable: Number(totalPayable.toFixed(2)),
     managerMealDeduction: Number(managerMealDeduction.toFixed(2)),
+    currentManager,
     memberSummaries,
   };
 }
