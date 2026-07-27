@@ -276,18 +276,14 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     },
   });
 
-  const bWeight = messSettings?.breakfastWeight ?? 1.0;
-  const lWeight = messSettings?.lunchWeight ?? 1.0;
-  const dWeight = messSettings?.dinnerWeight ?? 1.0;
-
   let todayB = 0;
   let todayL = 0;
   let todayD = 0;
 
   todayMeals.forEach((m: any) => {
-    todayB += (m.breakfast || 0) * bWeight;
-    todayL += (m.lunch || 0) * lWeight;
-    todayD += (m.dinner || 0) * dWeight;
+    todayB += (m.breakfast || 0);
+    todayL += (m.lunch || 0);
+    todayD += (m.dinner || 0);
   });
 
   const todayMealSummary = {
