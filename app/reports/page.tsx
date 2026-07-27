@@ -142,6 +142,16 @@ export default function ReportsPage() {
   const lw = settings?.lunchWeight ?? 1.0;
   const dw = settings?.dinnerWeight ?? 1.0;
 
+  const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
+
+  const displayMembers = isAdminOrManager
+    ? members
+    : members.filter((m) => m.id === user?.id);
+
+  const displayMemberSummaries = isAdminOrManager
+    ? summary?.memberSummaries
+    : summary?.memberSummaries?.filter((m: any) => m.userId === user?.id);
+
   return (
     <PageShell user={user} onLogout={handleLogout} title="রিপোর্ট ও ডাউনলোড কেন্দ্র">
           {/* Header */}
@@ -250,7 +260,7 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {members.map((m) => {
+                    {displayMembers.map((m) => {
                       let memberTotalMeals = 0;
                       return (
                         <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
@@ -330,7 +340,7 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {summary?.memberSummaries?.map((m: any) => (
+                    {displayMemberSummaries?.map((m: any) => (
                       <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                         <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
                         <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
