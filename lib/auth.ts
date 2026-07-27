@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mess_meal_tracker_secret_2026';
 export const TOKEN_NAME = 'mess_session_token';
+export const SESSION_MAX_AGE = 10 * 60; // 10 minutes in seconds (600s)
 
 export interface JwtPayload {
   userId: string;
@@ -22,7 +23,7 @@ export async function comparePassword(password: string, hashed: string): Promise
 }
 
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '10m' });
 }
 
 export function verifyToken(token: string): JwtPayload | null {
