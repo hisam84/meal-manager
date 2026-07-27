@@ -1,4 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <rect width="100" height="100" rx="28" fill="#0284c7"/>
-  <text x="50" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="58" font-weight="bold" fill="#ffffff" text-anchor="middle">ম</text>
+  <!-- Rounded Box Background -->
+  <rect width="100" height="100" rx="26" fill="#0284c7"/>
+  
+  <!-- Outer Plate Circle -->
+  <circle cx="50" cy="50" r="36" fill="none" stroke="#ffffff" stroke-width="4.5" opacity="0.9"/>
+  <circle cx="50" cy="50" r="28" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Spoon & Fork Crossed in Center -->
+  <g fill="#ffffff" transform="translate(50,50) scale(1.15) translate(-50,-50)">
+    <!-- Fork (Left) -->
+    <path d="M 37 30 L 37 43 C 37 47 41 50 44 50 L 44 70 C 44 71.5 45.5 73 47 73 C 48.5 73 50 71.5 50 70 L 50 50 C 53 50 57 47 57 43 L 57 30 L 54 30 L 54 41 C 54 43 53 44 51.5 44 L 51.5 30 L 48.5 30 L 48.5 44 C 47 44 46 43 46 41 L 46 30 L 43 30 L 43 41 C 43 43 42 44 40.5 44 L 40.5 30 Z" transform="rotate(-25 50 50)"/>
+    <!-- Spoon (Right) -->
+    <path d="M 50 30 C 43 30 42 38 42 44 C 42 48 46 51 47 52 L 47 70 C 47 71.5 48.5 73 50 73 C 51.5 73 53 71.5 53 70 L 53 52 C 54 51 58 48 58 44 C 58 38 57 30 50 30 Z" transform="rotate(25 50 50)"/>
+  </g>
 </svg>
