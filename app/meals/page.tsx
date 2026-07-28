@@ -285,7 +285,7 @@ export default function MealsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                  {members.map((member) => {
+                  {(isAdminOrManager ? members : members.filter((m) => m.id === user?.id)).map((member) => {
                     const userMeals = meals.filter((m) => m.userId === member.id);
 
                     // Count total ONLY for meals up to today
