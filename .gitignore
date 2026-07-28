@@ -7,3 +7,6 @@ node_modules
 .vercel
 patch.js
 patch.py
+
+.vercel
+.env*
