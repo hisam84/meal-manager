@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/components/PageShell';
-import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle, Pencil } from 'lucide-react';
+import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle, Pencil, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -29,6 +29,11 @@ export default function SuperAdminPage() {
   const [editAdminPhone, setEditAdminPhone] = useState('');
   const [editAdminPassword, setEditAdminPassword] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  // Reset Mess Data state
+  const [resetMess, setResetMess] = useState<any>(null);
+  const [resetConfirmInput, setResetConfirmInput] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -128,6 +133,36 @@ export default function SuperAdminPage() {
       alert(err.message);
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleResetMess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetMess) return;
+    if (resetConfirmInput !== 'RESET') {
+      alert('রিসেট করতে কনফার্মেশন বক্সে "RESET" লিখুন');
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const res = await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'RESET', messId: resetMess.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to reset mess data');
+
+      setMessage({ type: 'success', text: `মেস "${resetMess.name}"-এর সকল লেনদেন ও মিলের ডেটা সফলভাবে রিসেট করা হয়েছে!` });
+      setResetMess(null);
+      setResetConfirmInput('');
+      fetchMesses();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -310,15 +345,29 @@ export default function SuperAdminPage() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-sky-600" />
-                        <span>মেম্বার: {m._count?.users || 0} জন</span>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5 text-sky-600" />
+                          <span>{m._count?.users || 0} জন</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{m._count?.meals || 0} টি</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>মিল: {m._count?.meals || 0} টি</span>
-                      </div>
+
+                      <button
+                        onClick={() => {
+                          setResetMess(m);
+                          setResetConfirmInput('');
+                        }}
+                        className="px-2.5 py-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold border border-rose-200/60 dark:border-rose-900/60"
+                        title="মেসের সকল ডেটা রিসেট করুন"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>ডেটা রিসেট</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -401,6 +450,55 @@ export default function SuperAdminPage() {
                   className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-amber-600/30 disabled:opacity-50"
                 >
                   {updating ? 'আপডেট হচ্ছে...' : 'সেভ করুন'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Mess Data Modal (SuperAdmin Only) */}
+      {resetMess && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/80 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">মেস ডেটা রিসেট (Danger Zone)</h3>
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">মেস: {resetMess.name} ({resetMess.code})</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              এই মেসের সকল মিল, খরচ, পেমেন্ট, রাঁধুনীর বিল এবং ম্যানেজার পদের হিস্ট্রি মুছে ফেলা হবে। নিশ্চিত করতে নিচে <strong className="text-rose-600 font-bold">"RESET"</strong> টাইপ করুন:
+            </p>
+
+            <form onSubmit={handleResetMess} className="space-y-3">
+              <input
+                type="text"
+                placeholder='টাইপ করুন "RESET"'
+                value={resetConfirmInput}
+                onChange={(e) => setResetConfirmInput(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold tracking-widest text-center"
+              />
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResetMess(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetting || resetConfirmInput !== 'RESET'}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-rose-600/30 text-xs transition-all flex items-center gap-1.5 disabled:opacity-40"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{resetting ? 'রিসেট হচ্ছে...' : 'মেস ডেটা রিসেট করুন'}</span>
                 </button>
               </div>
             </form>
