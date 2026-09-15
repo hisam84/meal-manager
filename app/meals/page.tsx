@@ -520,7 +520,10 @@ export default function MealsPage() {
             <table className="w-full text-center text-xs border-collapse">
               <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
                 <tr>
-                  <th className="px-3 py-3 text-left border-r border-b border-slate-200 dark:border-slate-700 min-w-[150px] sticky left-0 bg-slate-100 dark:bg-slate-800 z-10">
+                  <th className="px-2 py-3 text-center border-r border-b border-slate-200 dark:border-slate-700 w-10 sticky left-0 bg-slate-100 dark:bg-slate-800 z-20">
+                    #
+                  </th>
+                  <th className="px-3 py-3 text-left border-r border-b border-slate-200 dark:border-slate-700 min-w-[140px] sticky left-10 bg-slate-100 dark:bg-slate-800 z-10">
                     মেম্বার নাম
                   </th>
                   {gridDates.map((item) => (
@@ -547,12 +550,12 @@ export default function MealsPage() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
                 {gridDates.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-slate-400 text-xs">
+                    <td colSpan={4} className="py-8 text-center text-slate-400 text-xs">
                       নির্বাচিত মেয়াদে কোনো তারিখ পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  (isAdminOrManager ? members : members.filter((m) => m.id === user?.id)).map((member) => {
+                  (isAdminOrManager ? members : members.filter((m) => m.id === user?.id)).map((member, index) => {
                     const userMeals = meals.filter((m) => m.userId === member.id);
 
                     // Count total ONLY for meals up to today within the visible dates
@@ -562,8 +565,13 @@ export default function MealsPage() {
 
                     return (
                       <tr key={member.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
+                        {/* Serial Number */}
+                        <td className="px-2 py-2 text-center font-semibold text-slate-400 dark:text-slate-500 border-r border-slate-200 dark:border-slate-800 sticky left-0 bg-white dark:bg-slate-900 z-20 shadow-sm text-xs">
+                          {index + 1}
+                        </td>
+
                         {/* Member Name */}
-                        <td className="px-3 py-2 text-left font-bold text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800 sticky left-0 bg-white dark:bg-slate-900 z-10 shadow-sm truncate">
+                        <td className="px-3 py-2 text-left font-bold text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800 sticky left-10 bg-white dark:bg-slate-900 z-10 shadow-sm truncate">
                           {member.name}
                         </td>
 

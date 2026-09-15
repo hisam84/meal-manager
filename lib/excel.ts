@@ -21,7 +21,8 @@ export function generateMonthlySummaryExcel(summary: MonthlySummaryResult): Buff
   XLSX.utils.book_append_sheet(wb, overviewWs, 'Overview');
 
   // Member Summary Sheet
-  const memberRows = summary.memberSummaries.map((m) => ({
+  const memberRows = summary.memberSummaries.map((m, index) => ({
+    '#': index + 1,
     'Member Name': m.name,
     'Phone': m.phone,
     'Role': m.role,
@@ -66,8 +67,8 @@ export function generateMealChartExcel(
   });
 
   // Create header rows
-  const row2: string[] = ['সদস্যের নাম'];
-  const row3: string[] = [''];
+  const row2: string[] = ['#', 'সদস্যের নাম'];
+  const row3: string[] = ['', ''];
 
   daysArray.forEach((day) => {
     row2.push(`${day}`, '', '');
@@ -92,8 +93,8 @@ export function generateMealChartExcel(
   const lw = settings?.lunchWeight ?? 1.0;
   const dw = settings?.dinnerWeight ?? 1.0;
 
-  members.forEach((m) => {
-    const memberRow: any[] = [m.name];
+  members.forEach((m, index) => {
+    const memberRow: any[] = [index + 1, m.name];
     let memberTotalMeals = 0;
 
     daysArray.forEach((day) => {

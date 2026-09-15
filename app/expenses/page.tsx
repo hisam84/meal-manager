@@ -525,7 +525,8 @@ export default function ExpensesPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                   <tr>
-                    <th className="px-4 py-3 rounded-l-lg">তারিখ</th>
+                    <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                    <th className="px-4 py-3">তারিখ</th>
                     <th className="px-4 py-3">বিবরণ</th>
                     <th className="px-4 py-3">ক্যাটাগরি</th>
                     <th className="px-4 py-3 font-semibold">পরিমাণ (৳)</th>
@@ -536,13 +537,16 @@ export default function ExpensesPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {expenses.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={isAdminOrManager ? 7 : 6} className="px-4 py-8 text-center text-slate-400">
                         কোনো খরচের তথ্য পাওয়া যায়নি।
                       </td>
                     </tr>
                   ) : (
-                    expenses.map((exp) => (
+                    expenses.map((exp, index) => (
                       <tr key={exp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                          {index + 1}
+                        </td>
                         <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{exp.date}</td>
                         <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{exp.description}</td>
                         <td className="px-4 py-3">
@@ -585,11 +589,16 @@ export default function ExpensesPage() {
 
             <form onSubmit={handleSaveCustomCookBills} className="space-y-4">
               <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
-                {members.map((m) => (
+                {members.map((m, index) => (
                   <div key={m.id} className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                    <div className="overflow-hidden">
-                      <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">{m.name}</p>
-                      <span className="text-[10px] text-slate-500 font-mono">{m.phone}</span>
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <span className="w-5 h-5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center text-[10px] font-bold shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="overflow-hidden">
+                        <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">{m.name}</p>
+                        <span className="text-[10px] text-slate-500 font-mono">{m.phone}</span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">

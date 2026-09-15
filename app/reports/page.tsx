@@ -470,7 +470,10 @@ export default function ReportsPage() {
             <table className="w-full text-center text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
-                  <th className="px-3 py-2 text-left sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700 min-w-[130px]">
+                  <th className="px-2 py-2 text-center sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-700 w-10">
+                    #
+                  </th>
+                  <th className="px-3 py-2 text-left sticky left-10 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700 min-w-[130px]">
                     সদস্যের নাম
                   </th>
                   {gridDates.map((item) => (
@@ -484,7 +487,10 @@ export default function ReportsPage() {
                   </th>
                 </tr>
                 <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[10px] font-semibold border-b border-slate-200 dark:border-slate-700">
-                  <th className="px-3 py-1.5 text-left sticky left-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
+                  <th className="px-2 py-1.5 text-center sticky left-0 bg-slate-50 dark:bg-slate-800/90 z-20 border-r border-slate-200 dark:border-slate-700">
+                    নং
+                  </th>
+                  <th className="px-3 py-1.5 text-left sticky left-10 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
                     বেলা ➔
                   </th>
                   {gridDates.map((item) => (
@@ -500,11 +506,14 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {displayMembers.map((m) => {
+                {displayMembers.map((m, index) => {
                   let memberTotalMeals = 0;
                   return (
                     <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 truncate">
+                      <td className="px-2 py-2 text-center font-semibold text-slate-400 dark:text-slate-500 text-xs sticky left-0 bg-white dark:bg-slate-900 z-20 border-r border-slate-200 dark:border-slate-800">
+                        {index + 1}
+                      </td>
+                      <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-10 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 truncate">
                         {m.name}
                       </td>
                       {gridDates.map((item) => {

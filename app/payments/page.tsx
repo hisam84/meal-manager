@@ -448,7 +448,7 @@ export default function PaymentsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayMembers.map((m) => {
+          {displayMembers.map((m, index) => {
             const memberPaymentsList = payments.filter((p) => p.userId === m.id);
             const memberTotalPaid = memberPaymentsList.reduce((sum, p) => sum + p.amount, 0);
 
@@ -458,9 +458,14 @@ export default function PaymentsPage() {
                 className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{m.name}</h4>
-                    <span className="text-[11px] text-slate-500 font-medium">{m.phone}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center text-xs font-bold shrink-0">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{m.name}</h4>
+                      <span className="text-[11px] text-slate-500 font-medium">{m.phone}</span>
+                    </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                     ৳{memberTotalPaid.toLocaleString('bn-BD')}
@@ -502,9 +507,9 @@ export default function PaymentsPage() {
               className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1 text-xs font-semibold"
             >
               <option value="ALL">সকল মেম্বার</option>
-              {displayMembers.map((m) => (
+              {displayMembers.map((m, index) => (
                 <option key={m.id} value={m.id}>
-                  {m.name}
+                  {index + 1}. {m.name}
                 </option>
               ))}
             </select>
@@ -515,7 +520,8 @@ export default function PaymentsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
               <tr>
-                <th className="px-4 py-3 rounded-l-lg">তারিখ</th>
+                <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                <th className="px-4 py-3">তারিখ</th>
                 <th className="px-4 py-3">মেম্বার</th>
                 <th className="px-4 py-3 font-semibold">জমার পরিমাণ (৳)</th>
                 <th className="px-4 py-3">নোট / মাধ্যম</th>
@@ -527,15 +533,18 @@ export default function PaymentsPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={isAdminOrManager ? 8 : 7} className="px-4 py-8 text-center text-slate-400">
                     কোনো পেমেন্টের তথ্য পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
-                filteredPayments.map((p) => {
+                filteredPayments.map((p, index) => {
                   const hasEdits = p.editHistory && p.editHistory.length > 0;
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                        {index + 1}
+                      </td>
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.date}</td>
                       <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{p.user?.name}</td>
                       <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">
