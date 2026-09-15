@@ -103,12 +103,11 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   if (termStartDate && termEndDate) {
     dateFilter = {
       gte: termStartDate,
-      lte: termEndDate < todayStr ? termEndDate : todayStr,
+      lte: termEndDate,
     };
   } else {
     dateFilter = {
       startsWith: month,
-      lte: todayStr,
     };
   }
 
