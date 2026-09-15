@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/components/PageShell';
-import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle, Pencil, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Plus, Building2, Users, UtensilsCrossed, Receipt, Wallet, UserCheck, KeyRound, CheckCircle2, AlertCircle, Pencil, RotateCcw, AlertTriangle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function SuperAdminPage() {
   const [adminName, setAdminName] = useState('');
   const [adminPhone, setAdminPhone] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [creating, setCreating] = useState(false);
@@ -28,6 +29,7 @@ export default function SuperAdminPage() {
   const [editAdminName, setEditAdminName] = useState('');
   const [editAdminPhone, setEditAdminPhone] = useState('');
   const [editAdminPassword, setEditAdminPassword] = useState('');
+  const [showEditAdminPassword, setShowEditAdminPassword] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   // Reset Mess Data state
@@ -277,14 +279,24 @@ export default function SuperAdminPage() {
                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       এডমিনের পাসওয়ার্ড
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showAdminPassword ? 'text' : 'password'}
+                        required
+                        placeholder="••••••••"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-3 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1"
+                        title={showAdminPassword ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+                      >
+                        {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -427,13 +439,23 @@ export default function SuperAdminPage() {
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                   নতুন পাসওয়ার্ড (ঐচ্ছিক — পরিবর্তন করতে চাইলে দিন)
                 </label>
-                <input
-                  type="password"
-                  placeholder="পাসওয়ার্ড পরিবর্তন না করতে চাইলে ফাঁকা রাখুন"
-                  value={editAdminPassword}
-                  onChange={(e) => setEditAdminPassword(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showEditAdminPassword ? 'text' : 'password'}
+                    placeholder="পাসওয়ার্ড পরিবর্তন না করতে চাইলে ফাঁকা রাখুন"
+                    value={editAdminPassword}
+                    onChange={(e) => setEditAdminPassword(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditAdminPassword(!showEditAdminPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1"
+                    title={showEditAdminPassword ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+                  >
+                    {showEditAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
