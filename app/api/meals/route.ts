@@ -14,10 +14,14 @@ export async function GET(req: Request) {
     const month = searchParams.get('month');
     const date = searchParams.get('date');
     const userId = searchParams.get('userId');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     const where: any = { messId: currentUser.messId };
 
-    if (month) {
+    if (startDate && endDate) {
+      where.date = { gte: startDate, lte: endDate };
+    } else if (month) {
       where.date = { startsWith: month };
     } else if (date) {
       where.date = date;
@@ -54,7 +58,7 @@ export async function POST(req: Request) {
       userId,
       date,
       breakfastCount = 1,
-      breakfastMode = 'ONCE', // 'DAILY' | 'ONCE' | 'OFF'
+      breakfastMode = 'ONCE', // 'DAILY' | 'ONCE' | 'OFF' | 'OFF_ONCE'
       lunchCount = 1,
       lunchMode = 'ONCE',
       dinnerCount = 1,
@@ -119,23 +123,43 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Apply DAILY or OFF settings to FUTURE dates (> D) within the month
+    // 2. Apply DAILY or OFF settings to FUTURE dates (> D) within the manager's term or month
     const hasDailyOrOffScope =
       breakfastMode === 'DAILY' || breakfastMode === 'OFF' ||
       lunchMode === 'DAILY' || lunchMode === 'OFF' ||
       dinnerMode === 'DAILY' || dinnerMode === 'OFF';
 
     if (hasDailyOrOffScope) {
-      const startDate = new Date(date);
-      const year = startDate.getFullYear();
-      const monthIndex = startDate.getMonth();
-      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-      const currentDay = startDate.getDate();
+      // Find the active term for this date to constrain propagation
+      const currentTerm = await prisma.managerTerm.findFirst({
+        where: {
+          messId: currentUser.messId,
+          startDate: { lte: date },
+          endDate: { gte: date },
+        },
+      });
 
-      for (let day = currentDay + 1; day <= daysInMonth; day++) {
-        const dayStr = day < 10 ? `0${day}` : `${day}`;
-        const monthStr = (monthIndex + 1) < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
-        const futureDateStr = `${year}-${monthStr}-${dayStr}`;
+      const startD = new Date(date + 'T00:00:00');
+      let endD: Date;
+
+      if (currentTerm) {
+        endD = new Date(currentTerm.endDate + 'T00:00:00');
+      } else {
+        const year = startD.getFullYear();
+        const monthIndex = startD.getMonth();
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        endD = new Date(year, monthIndex, daysInMonth);
+      }
+
+      // Iterate day by day from D + 1 to endD
+      const iter = new Date(startD);
+      iter.setDate(iter.getDate() + 1);
+
+      while (iter <= endD) {
+        const y = iter.getFullYear();
+        const m = String(iter.getMonth() + 1).padStart(2, '0');
+        const dNum = String(iter.getDate()).padStart(2, '0');
+        const futureDateStr = `${y}-${m}-${dNum}`;
 
         const existingMeal = await prisma.meal.findUnique({
           where: {
@@ -184,6 +208,8 @@ export async function POST(req: Request) {
             total: nextTotal,
           },
         });
+
+        iter.setDate(iter.getDate() + 1);
       }
     }
 

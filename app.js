@@ -3675,11 +3675,31 @@
     if (id) {
       const idx = payments.findIndex(p => p.id === id);
       if (idx !== -1) {
+        if (!payments[idx].editHistory) payments[idx].editHistory = [];
+        const hasChanged =
+          payments[idx].amount !== amount ||
+          payments[idx].date !== date ||
+          payments[idx].userId !== userId ||
+          payments[idx].note !== note;
+
+        if (hasChanged) {
+          payments[idx].editHistory.unshift({
+            editedBy: state.currentUser ? state.currentUser.name : 'ম্যানেজার',
+            editedAt: new Date().toISOString(),
+            prevAmount: payments[idx].amount,
+            newAmount: amount,
+            prevDate: payments[idx].date,
+            newDate: date,
+            prevNote: payments[idx].note,
+            newNote: note,
+          });
+        }
+
         payments[idx].userId = userId;
         payments[idx].date = date;
         payments[idx].amount = amount;
         payments[idx].note = note;
-        showToast('Payment record updated successfully.', 'success');
+        showToast('Payment record updated successfully with history logged.', 'success');
       }
     } else {
       payments.push({
@@ -3689,6 +3709,7 @@
         amount,
         note,
         addedBy: state.currentUser ? state.currentUser.id : 'system',
+        editHistory: [],
         createdAt: new Date().toISOString()
       });
       showToast('Payment recorded successfully.', 'success');

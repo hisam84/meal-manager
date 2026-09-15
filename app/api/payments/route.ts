@@ -31,6 +31,12 @@ export async function GET(req: Request) {
       include: {
         user: { select: { id: true, name: true, phone: true } },
         addedBy: { select: { id: true, name: true } },
+        editHistory: {
+          include: {
+            editedBy: { select: { id: true, name: true, phone: true, role: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
       orderBy: { date: 'desc' },
     });
@@ -49,17 +55,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, userId, amount, date, note } = await req.json();
+    const { id, userId, amount, date, note, reason } = await req.json();
 
     if (!userId || !amount || !date) {
       return NextResponse.json({ error: 'Member, amount, and date are required' }, { status: 400 });
     }
 
-    // Duty date check
-    const isAuthorized = await isUserMealManagerForDate(currentUser, date);
-    if (!isAuthorized) {
+    // Duty date check for new date
+    const isAuthorizedForNewDate = await isUserMealManagerForDate(currentUser, date);
+    if (!isAuthorizedForNewDate) {
       return NextResponse.json(
-        { error: 'You are only authorized to record payments for dates within your elected manager term.' },
+        { error: 'You are only authorized to record or edit payments for dates within your elected manager term.' },
         { status: 403 }
       );
     }
@@ -71,15 +77,77 @@ export async function POST(req: Request) {
 
     let payment;
     if (id) {
-      payment = await prisma.payment.update({
+      // Find existing payment
+      const existingPayment = await prisma.payment.findUnique({
         where: { id },
-        data: {
-          userId,
-          amount: numericAmount,
-          date,
-          note: note ? note.trim() : null,
-        },
       });
+
+      if (!existingPayment) {
+        return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+      }
+
+      // Check authorization for the existing date as well if it differs
+      if (existingPayment.date !== date) {
+        const isAuthorizedForOldDate = await isUserMealManagerForDate(currentUser, existingPayment.date);
+        if (!isAuthorizedForOldDate) {
+          return NextResponse.json(
+            { error: 'You are not authorized to modify a payment originally dated outside your manager term.' },
+            { status: 403 }
+          );
+        }
+      }
+
+      const cleanNote = note ? note.trim() : null;
+      const cleanPrevNote = existingPayment.note ? existingPayment.note.trim() : null;
+
+      const hasChanged =
+        existingPayment.amount !== numericAmount ||
+        existingPayment.date !== date ||
+        existingPayment.userId !== userId ||
+        cleanPrevNote !== cleanNote;
+
+      if (hasChanged) {
+        // Update payment and log audit record in transaction
+        const [updatedPayment] = await prisma.$transaction([
+          prisma.payment.update({
+            where: { id },
+            data: {
+              userId,
+              amount: numericAmount,
+              date,
+              note: cleanNote,
+            },
+            include: {
+              user: { select: { id: true, name: true, phone: true } },
+              addedBy: { select: { id: true, name: true } },
+              editHistory: {
+                include: {
+                  editedBy: { select: { id: true, name: true, phone: true, role: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+              },
+            },
+          }),
+          prisma.paymentEditHistory.create({
+            data: {
+              paymentId: id,
+              editedById: currentUser.id,
+              prevAmount: existingPayment.amount,
+              newAmount: numericAmount,
+              prevDate: existingPayment.date,
+              newDate: date,
+              prevNote: cleanPrevNote,
+              newNote: cleanNote,
+              prevUserId: existingPayment.userId,
+              newUserId: userId,
+              reason: reason ? reason.trim() : null,
+            },
+          }),
+        ]);
+        payment = updatedPayment;
+      } else {
+        payment = existingPayment;
+      }
     } else {
       payment = await prisma.payment.create({
         data: {
@@ -89,6 +157,11 @@ export async function POST(req: Request) {
           date,
           note: note ? note.trim() : null,
           addedById: currentUser.id,
+        },
+        include: {
+          user: { select: { id: true, name: true, phone: true } },
+          addedBy: { select: { id: true, name: true } },
+          editHistory: true,
         },
       });
     }
