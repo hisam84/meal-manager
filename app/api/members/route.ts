@@ -20,7 +20,7 @@ export async function GET() {
         active: true,
         createdAt: true,
       },
-      orderBy: { name: 'asc' },
+      orderBy: { createdAt: 'asc' },
     });
 
     return NextResponse.json(members);

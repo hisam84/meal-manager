@@ -95,7 +95,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   const users = await prisma.user.findMany({
     where: { messId, role: { not: 'SUPERADMIN' } },
     select: { id: true, name: true, phone: true, role: true, active: true },
-    orderBy: { name: 'asc' },
+    orderBy: { createdAt: 'asc' },
   });
 
   // Date condition for meals, expenses, payments

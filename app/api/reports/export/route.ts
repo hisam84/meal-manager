@@ -20,7 +20,7 @@ export async function GET(req: Request) {
       const members = await prisma.user.findMany({
         where: { messId: currentUser.messId, role: { not: 'SUPERADMIN' } },
         select: { id: true, name: true, phone: true, role: true },
-        orderBy: { name: 'asc' },
+        orderBy: { createdAt: 'asc' },
       });
 
       let mealWhere: any = { messId: currentUser.messId };

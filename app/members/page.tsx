@@ -426,7 +426,8 @@ export default function MembersPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                   <tr>
-                    <th className="px-4 py-3 rounded-l-lg">নাম</th>
+                    <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                    <th className="px-4 py-3">নাম</th>
                     <th className="px-4 py-3">ফোন</th>
                     <th className="px-4 py-3">রোল</th>
                     <th className="px-4 py-3">স্ট্যাটাস</th>
@@ -434,8 +435,11 @@ export default function MembersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {members.map((m) => (
+                  {members.map((m, index) => (
                     <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                        {index + 1}
+                      </td>
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                         {m.name}
                         {m.id === user?.id && <span className="ml-1 text-xs text-sky-600 font-bold">(আমি)</span>}
