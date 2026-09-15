@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     } else {
       // Per person amount specified
       const pAmount = Number(perPersonAmount) || 0;
-      members.forEach((m) => {
+      members.forEach((m: { id: string }) => {
         finalMemberBills[m.id] = pAmount;
       });
       calculatedTotal = pAmount * members.length;
