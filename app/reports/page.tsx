@@ -52,6 +52,8 @@ export default function ReportsPage() {
       .then((data) => {
         if (!data.authenticated) {
           router.push('/login');
+        } else if (data.user.role === 'MEMBER') {
+          router.push('/');
         } else {
           setUser(data.user);
           if (data.user.email) setRecipientEmail(data.user.email);

@@ -67,7 +67,7 @@ export default function Sidebar({ user, onLogout, mobileOpen, onClose }: Sidebar
     { href: '/payments', label: 'পেমেন্ট/জমা', icon: Wallet },
     { href: '/summary', label: 'মাসিক সামারি', icon: PieChart },
     { href: '/members', label: 'মেম্বার তালিকা', icon: Users, adminOnly: true },
-    { href: '/reports', label: 'রিপোর্ট ও এক্সপোর্ট', icon: FileSpreadsheet },
+    { href: '/reports', label: 'রিপোর্ট ও এক্সপোর্ট', icon: FileSpreadsheet, adminOnly: true },
     { href: '/settings', label: 'সেটিংস ও ব্যাকআপ', icon: Settings, adminOnly: true },
     { href: '/profile', label: 'মাই প্রোফাইল', icon: User },
   ];

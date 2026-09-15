@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 
@@ -13,39 +13,6 @@ interface PageShellProps {
 
 export default function PageShell({ user, onLogout, title, children }: PageShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Auto logout on 10 minutes of user inactivity
-  useEffect(() => {
-    if (!user) return;
-
-    let timeoutId: NodeJS.Timeout;
-    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes (600,000 ms)
-
-    const handleAutoLogout = async () => {
-      try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-      } catch (err) {
-        console.error('Logout error:', err);
-      } finally {
-        window.location.href = '/login?expired=1';
-      }
-    };
-
-    const resetTimer = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleAutoLogout, INACTIVITY_LIMIT_MS);
-    };
-
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
-
-    resetTimer();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      events.forEach((event) => window.removeEventListener(event, resetTimer));
-    };
-  }, [user]);
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
