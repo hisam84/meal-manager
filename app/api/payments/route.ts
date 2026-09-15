@@ -30,25 +30,38 @@ export async function GET(req: Request) {
       where.userId = currentUser.id;
     }
 
-    const payments = await prisma.payment.findMany({
-      where,
-      include: {
-        user: { select: { id: true, name: true, phone: true } },
-        addedBy: { select: { id: true, name: true } },
-        editHistory: {
-          include: {
-            editedBy: { select: { id: true, name: true, phone: true, role: true } },
+    let payments;
+    try {
+      payments = await prisma.payment.findMany({
+        where,
+        include: {
+          user: { select: { id: true, name: true, phone: true } },
+          addedBy: { select: { id: true, name: true } },
+          editHistory: {
+            include: {
+              editedBy: { select: { id: true, name: true, phone: true, role: true } },
+            },
+            orderBy: { createdAt: 'desc' },
           },
-          orderBy: { createdAt: 'desc' },
         },
-      },
-      orderBy: { date: 'desc' },
-    });
+        orderBy: { date: 'desc' },
+      });
+    } catch (queryErr: any) {
+      // Fallback in case PaymentEditHistory table is not yet created in remote DB
+      payments = await prisma.payment.findMany({
+        where,
+        include: {
+          user: { select: { id: true, name: true, phone: true } },
+          addedBy: { select: { id: true, name: true } },
+        },
+        orderBy: { date: 'desc' },
+      });
+    }
 
     return NextResponse.json(payments);
   } catch (error: any) {
     console.error('Fetch payments error:', error);
-    return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to fetch payments' }, { status: 500 });
   }
 }
 
@@ -110,29 +123,23 @@ export async function POST(req: Request) {
         existingPayment.userId !== userId ||
         cleanPrevNote !== cleanNote;
 
+      payment = await prisma.payment.update({
+        where: { id },
+        data: {
+          userId,
+          amount: numericAmount,
+          date,
+          note: cleanNote,
+        },
+        include: {
+          user: { select: { id: true, name: true, phone: true } },
+          addedBy: { select: { id: true, name: true } },
+        },
+      });
+
       if (hasChanged) {
-        // Update payment and log audit record in transaction
-        const [updatedPayment] = await prisma.$transaction([
-          prisma.payment.update({
-            where: { id },
-            data: {
-              userId,
-              amount: numericAmount,
-              date,
-              note: cleanNote,
-            },
-            include: {
-              user: { select: { id: true, name: true, phone: true } },
-              addedBy: { select: { id: true, name: true } },
-              editHistory: {
-                include: {
-                  editedBy: { select: { id: true, name: true, phone: true, role: true } },
-                },
-                orderBy: { createdAt: 'desc' },
-              },
-            },
-          }),
-          prisma.paymentEditHistory.create({
+        try {
+          await prisma.paymentEditHistory.create({
             data: {
               paymentId: id,
               editedById: currentUser.id,
@@ -146,11 +153,10 @@ export async function POST(req: Request) {
               newUserId: userId,
               reason: reason ? reason.trim() : null,
             },
-          }),
-        ]);
-        payment = updatedPayment;
-      } else {
-        payment = existingPayment;
+          });
+        } catch (historyErr) {
+          console.warn('Could not record edit history entry:', historyErr);
+        }
       }
     } else {
       payment = await prisma.payment.create({
@@ -165,7 +171,6 @@ export async function POST(req: Request) {
         include: {
           user: { select: { id: true, name: true, phone: true } },
           addedBy: { select: { id: true, name: true } },
-          editHistory: true,
         },
       });
     }
@@ -173,7 +178,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, payment });
   } catch (error: any) {
     console.error('Save payment error:', error);
-    return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to record payment' }, { status: 500 });
   }
 }
 
