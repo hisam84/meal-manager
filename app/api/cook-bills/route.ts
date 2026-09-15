@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { isUserMealManagerForDate } from '@/lib/manager-duty';
+import { isUserMealManagerForMonth } from '@/lib/manager-duty';
 
 export async function GET(req: Request) {
   try {
@@ -43,12 +43,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Month is required' }, { status: 400 });
     }
 
-    // Manager term authorization for the selected month (check 1st day of month)
-    const checkDate = `${month}-01`;
-    const isAuthorized = await isUserMealManagerForDate(currentUser, checkDate);
+    // Manager term authorization for the selected month
+    const isAuthorized = await isUserMealManagerForMonth(currentUser, month);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to manage cook bills for months within your manager term.' },
+        { error: 'আপনি শুধুমাত্র আপনার নির্বাচিত ম্যানেজার মেয়াদের মাসের বাবুর্চি বিল পরিচালনা করতে পারবেন।' },
         { status: 403 }
       );
     }
@@ -133,11 +132,10 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Cook Bill not found' }, { status: 404 });
     }
 
-    const checkDate = `${bill.month}-01`;
-    const isAuthorized = await isUserMealManagerForDate(currentUser, checkDate);
+    const isAuthorized = await isUserMealManagerForMonth(currentUser, bill.month);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to delete cook bills for months within your manager term.' },
+        { error: 'এই বাবুর্চি বিলটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি ডিলিট করতে পারবেন না।' },
         { status: 403 }
       );
     }

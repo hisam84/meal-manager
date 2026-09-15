@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     const isAuthorized = await isUserMealManagerForDate(currentUser, date);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to manage meals for dates within your elected manager term.' },
+        { error: 'আপনি শুধুমাত্র আপনার নির্বাচিত ম্যানেজার মেয়াদের তারিখগুলোতে মিল এন্ট্রি বা পরিবর্তন করতে পারবেন।' },
         { status: 403 }
       );
     }
@@ -243,7 +243,7 @@ export async function DELETE(req: Request) {
     const isAuthorized = await isUserMealManagerForDate(currentUser, meal.date);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to delete meals for dates within your elected manager term.' },
+        { error: 'এই মিলের তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি ডিলিট করতে পারবেন না।' },
         { status: 403 }
       );
     }

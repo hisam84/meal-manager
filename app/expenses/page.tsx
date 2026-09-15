@@ -59,11 +59,35 @@ export default function ExpensesPage() {
           fetchExpenses(month, filterCategory);
           fetchMembers();
           fetchCookBill(cookBillMonth);
+
+          // If user is manager with terms, auto-default form date to within their active term if today is outside
+          if (data.user && data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN' && data.user.managerTerms?.length > 0) {
+            const today = new Date().toISOString().slice(0, 10);
+            const terms = data.user.managerTerms;
+            const isTodayInTerm = terms.some((t: any) => today >= t.startDate && today <= t.endDate);
+            if (!isTodayInTerm && terms[0]) {
+              setDate(terms[0].endDate >= today ? terms[0].startDate : terms[0].endDate);
+            }
+          }
         }
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  const isNonAdminManager = user && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN';
+  const userTerms = (user?.managerTerms || []) as any[];
+
+  const isDateWithinUserTerm = (targetDate: string) => {
+    if (!user) return false;
+    if (!isNonAdminManager) return true;
+    if (userTerms.length > 0) {
+      return userTerms.some(
+        (term: any) => targetDate >= term.startDate && targetDate <= term.endDate
+      );
+    }
+    return false;
+  };
 
   const fetchExpenses = (m: string, cat: string) => {
     fetch(`/api/expenses?month=${m}&category=${cat}`)
@@ -179,6 +203,15 @@ export default function ExpensesPage() {
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+
+    if (isNonAdminManager && !isDateWithinUserTerm(date)) {
+      setMessage({
+        type: 'error',
+        text: 'নির্বাচিত তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে। আপনি শুধুমাত্র আপনার মেয়াদের তারিখে খরচ এন্ট্রি করতে পারবেন।',
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -212,7 +245,8 @@ export default function ExpensesPage() {
 
     try {
       const res = await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete expense');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete expense');
       fetchExpenses(month, filterCategory);
     } catch (err: any) {
       alert(err.message);
@@ -235,10 +269,23 @@ export default function ExpensesPage() {
           {/* Add Expense Form (Admin & Manager Only) */}
           {isAdminOrManager && (
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                <span>নতুন খরচ এন্ট্রি করুন</span>
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <span>নতুন খরচ এন্ট্রি করুন</span>
+                </h2>
+
+                {isNonAdminManager && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-semibold">
+                    <span>
+                      মেয়াদ:{' '}
+                      {userTerms.length > 0
+                        ? userTerms.map((t) => `${t.startDate} হতে ${t.endDate}`).join(', ')
+                        : 'দায়িত্বপ্রাপ্ত মেয়াদ নেই'}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {message && (
                 <div
@@ -295,8 +342,18 @@ export default function ExpensesPage() {
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                      isNonAdminManager && !isDateWithinUserTerm(date)
+                        ? 'border-rose-400 dark:border-rose-600 bg-rose-50/50 dark:bg-rose-950/20'
+                        : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   />
+                  {isNonAdminManager && !isDateWithinUserTerm(date) && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>

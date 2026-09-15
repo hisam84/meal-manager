@@ -82,14 +82,14 @@ export async function POST(req: Request) {
     const isAuthorizedForNewDate = await isUserMealManagerForDate(currentUser, date);
     if (!isAuthorizedForNewDate) {
       return NextResponse.json(
-        { error: 'You are only authorized to record or edit payments for dates within your elected manager term.' },
+        { error: 'আপনি শুধুমাত্র আপনার নির্বাচিত ম্যানেজার মেয়াদের তারিখগুলোতে পেমেন্ট যুক্ত বা এডিট করতে পারবেন।' },
         { status: 403 }
       );
     }
 
     const numericAmount = Number(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
+      return NextResponse.json({ error: 'পেমেন্টের পরিমাণ সঠিক নয়' }, { status: 400 });
     }
 
     let payment;
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
         const isAuthorizedForOldDate = await isUserMealManagerForDate(currentUser, existingPayment.date);
         if (!isAuthorizedForOldDate) {
           return NextResponse.json(
-            { error: 'You are not authorized to modify a payment originally dated outside your manager term.' },
+            { error: 'পূর্বের পেমেন্টের তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি পরিবর্তন করতে পারবেন না।' },
             { status: 403 }
           );
         }
@@ -205,7 +205,7 @@ export async function DELETE(req: Request) {
     const isAuthorized = await isUserMealManagerForDate(currentUser, payment.date);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to delete payments for dates within your elected manager term.' },
+        { error: 'এই পেমেন্টের তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি ডিলিট করতে পারবেন না।' },
         { status: 403 }
       );
     }

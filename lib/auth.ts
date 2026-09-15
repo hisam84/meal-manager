@@ -45,7 +45,12 @@ export async function getCurrentUser() {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      include: { mess: true },
+      include: {
+        mess: true,
+        managerTerms: {
+          orderBy: { startDate: 'desc' },
+        },
+      },
     });
 
     if (!user || !user.active) return null;

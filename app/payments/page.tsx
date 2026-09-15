@@ -71,11 +71,36 @@ export default function PaymentsPage() {
           setUser(data.user);
           fetchMembers();
           fetchPayments(month);
+
+          // If user is manager with terms, auto-default form date to within their active term if today is outside
+          if (data.user && data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN' && data.user.managerTerms?.length > 0) {
+            const today = new Date().toISOString().slice(0, 10);
+            const terms = data.user.managerTerms;
+            const isTodayInTerm = terms.some((t: any) => today >= t.startDate && today <= t.endDate);
+            if (!isTodayInTerm && terms[0]) {
+              // Default to the latest term's end or start date
+              setDate(terms[0].endDate >= today ? terms[0].startDate : terms[0].endDate);
+            }
+          }
         }
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  const isNonAdminManager = user && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN';
+  const userTerms = (user?.managerTerms || []) as any[];
+
+  const isDateWithinUserTerm = (targetDate: string) => {
+    if (!user) return false;
+    if (!isNonAdminManager) return true;
+    if (userTerms.length > 0) {
+      return userTerms.some(
+        (term: any) => targetDate >= term.startDate && targetDate <= term.endDate
+      );
+    }
+    return false;
+  };
 
   const fetchMembers = () => {
     fetch('/api/members')
@@ -111,6 +136,15 @@ export default function PaymentsPage() {
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+
+    if (isNonAdminManager && !isDateWithinUserTerm(date)) {
+      setMessage({
+        type: 'error',
+        text: 'নির্বাচিত তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে। আপনি শুধুমাত্র আপনার মেয়াদের তারিখে পেমেন্ট এন্ট্রি করতে পারবেন।',
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -153,6 +187,17 @@ export default function PaymentsPage() {
     e.preventDefault();
     if (!editingPayment) return;
     setEditError(null);
+
+    if (isNonAdminManager && !isDateWithinUserTerm(editDate)) {
+      setEditError('নির্বাচিত নতুন তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে।');
+      return;
+    }
+
+    if (isNonAdminManager && !isDateWithinUserTerm(editingPayment.date)) {
+      setEditError('পূর্বের পেমেন্টের তারিখটি আপনার মেয়াদের বাইরে থাকায় এটি এডিট করা যাবে না।');
+      return;
+    }
+
     setEditSaving(true);
 
     try {
@@ -187,7 +232,8 @@ export default function PaymentsPage() {
 
     try {
       const res = await fetch(`/api/payments?id=${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete payment');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete payment');
       fetchPayments(month);
     } catch (err: any) {
       alert(err.message);
@@ -250,10 +296,24 @@ export default function PaymentsPage() {
       {/* Add Payment Form (Admin & Manager Only) */}
       {isAdminOrManager && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <span>মেম্বার পেমেন্ট এন্ট্রি দিন (নতুন জমা যোগ করুন)</span>
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <span>মেম্বার পেমেন্ট এন্ট্রি দিন (নতুন জমা যোগ করুন)</span>
+            </h2>
+
+            {isNonAdminManager && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-semibold">
+                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                <span>
+                  মেয়াদ:{' '}
+                  {userTerms.length > 0
+                    ? userTerms.map((t) => `${t.startDate} হতে ${t.endDate}`).join(', ')
+                    : 'দায়িত্বপ্রাপ্ত মেয়াদ নেই'}
+                </span>
+              </div>
+            )}
+          </div>
 
           {message && (
             <div
@@ -311,8 +371,18 @@ export default function PaymentsPage() {
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                    isNonAdminManager && !isDateWithinUserTerm(date)
+                      ? 'border-rose-400 dark:border-rose-600 bg-rose-50/50 dark:bg-rose-950/20'
+                      : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {isNonAdminManager && !isDateWithinUserTerm(date) && (
+                  <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -688,8 +758,18 @@ export default function PaymentsPage() {
                     required
                     value={editDate}
                     onChange={(e) => setEditDate(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                      isNonAdminManager && !isDateWithinUserTerm(editDate)
+                        ? 'border-rose-400 dark:border-rose-600 bg-rose-50/50 dark:bg-rose-950/20'
+                        : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   />
+                  {isNonAdminManager && !isDateWithinUserTerm(editDate) && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>তারিখটি আপনার ম্যানেজার মেয়াদের বাইরে</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

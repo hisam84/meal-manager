@@ -163,6 +163,20 @@ export default function MealsPage() {
     router.push('/login');
   };
 
+  const isNonAdminManager = user && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN';
+  const userTerms = (user?.managerTerms || []) as any[];
+
+  const isDateWithinUserTerm = (targetDate: string) => {
+    if (!user) return false;
+    if (!isNonAdminManager) return true;
+    if (userTerms.length > 0) {
+      return userTerms.some(
+        (term: any) => targetDate >= term.startDate && targetDate <= term.endDate
+      );
+    }
+    return false;
+  };
+
   const isAdminOrManager = user?.role === 'SUPERADMIN' || user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   // Determine active term & date array
@@ -275,6 +289,14 @@ export default function MealsPage() {
     e.preventDefault();
     if (!selectedCell || !isAdminOrManager) return;
 
+    if (isNonAdminManager && !isDateWithinUserTerm(selectedCell.date)) {
+      setMessage({
+        type: 'error',
+        text: 'এই তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে। আপনি শুধুমাত্র আপনার মেয়াদের তারিখে মিল পরিবর্তন করতে পারবেন।',
+      });
+      return;
+    }
+
     setMessage(null);
     setSaving(true);
 
@@ -330,6 +352,11 @@ export default function MealsPage() {
   const lVal = (lunchMode === 'OFF' || lunchMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(lunchCount) || 0));
   const dVal = (dinnerMode === 'OFF' || dinnerMode === 'OFF_ONCE') ? 0 : Math.max(0, Math.floor(Number(dinnerCount) || 0));
   const modalCalculatedTotal = (bVal * bw) + (lVal * lw) + (dVal * dw);
+
+  const isCellEditable = Boolean(
+    isAdminOrManager &&
+    (!isNonAdminManager || (selectedCell && isDateWithinUserTerm(selectedCell.date)))
+  );
 
   return (
     <>
@@ -608,12 +635,16 @@ export default function MealsPage() {
               </button>
             </div>
 
-            {!isAdminOrManager ? (
-              /* Read-Only View for General Members */
+            {!isCellEditable ? (
+              /* Read-Only View */
               <div className="space-y-4">
                 <div className="p-3.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2 border border-slate-200 dark:border-slate-700">
                   <Lock className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>আপনি সাধারণ মেম্বার হিসেবে দেখছেন (Read-Only View)। মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।</span>
+                  <span>
+                    {isNonAdminManager
+                      ? `এই তারিখটি (${selectedCell.date}) আপনার নির্বাচিত দায়িত্বের মেয়াদের বাইরে। আপনি শুধুমাত্র আপনার মেয়াদের তারিখে মিল পরিবর্তন করতে পারবেন।`
+                      : 'আপনি সাধারণ মেম্বার হিসেবে দেখছেন (Read-Only View)। মিল এডিটের জন্য মেস এডমিন বা ম্যানেজারের সাথে যোগাযোগ করুন।'}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

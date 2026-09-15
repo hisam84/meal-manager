@@ -56,22 +56,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Amount, description, category, and date are required' }, { status: 400 });
     }
 
-    // Duty date check
+    // Duty date check for target date
     const isAuthorized = await isUserMealManagerForDate(currentUser, date);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to add expenses for dates within your elected manager term.' },
+        { error: 'আপনি শুধুমাত্র আপনার নির্বাচিত ম্যানেজার মেয়াদের তারিখগুলোতে খরচ এন্ট্রি বা এডিট করতে পারবেন।' },
         { status: 403 }
       );
     }
 
     const numericAmount = Number(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      return NextResponse.json({ error: 'Invalid expense amount' }, { status: 400 });
+      return NextResponse.json({ error: 'খরচের পরিমাণ সঠিক নয়' }, { status: 400 });
     }
 
     let expense;
     if (id) {
+      const existingExpense = await prisma.expense.findUnique({ where: { id } });
+      if (!existingExpense) {
+        return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+      }
+
+      if (existingExpense.date !== date) {
+        const isAuthorizedForOldDate = await isUserMealManagerForDate(currentUser, existingExpense.date);
+        if (!isAuthorizedForOldDate) {
+          return NextResponse.json(
+            { error: 'পূর্বের খরচের তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি পরিবর্তন করতে পারবেন না।' },
+            { status: 403 }
+          );
+        }
+      }
+
       expense = await prisma.expense.update({
         where: { id },
         data: {
@@ -126,7 +141,7 @@ export async function DELETE(req: Request) {
     const isAuthorized = await isUserMealManagerForDate(currentUser, expense.date);
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'You are only authorized to delete expenses for dates within your elected manager term.' },
+        { error: 'এই খরচের তারিখটি আপনার নির্বাচিত ম্যানেজার মেয়াদের বাইরে থাকায় এটি ডিলিট করতে পারবেন না।' },
         { status: 403 }
       );
     }
