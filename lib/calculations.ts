@@ -99,10 +99,17 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   });
 
   // Date condition for meals, expenses, payments
-  const dateFilter: any = { startsWith: month, lte: todayStr };
+  let dateFilter: any;
   if (termStartDate && termEndDate) {
-    dateFilter.gte = termStartDate;
-    dateFilter.lte = termEndDate < todayStr ? termEndDate : todayStr;
+    dateFilter = {
+      gte: termStartDate,
+      lte: termEndDate < todayStr ? termEndDate : todayStr,
+    };
+  } else {
+    dateFilter = {
+      startsWith: month,
+      lte: todayStr,
+    };
   }
 
   // Get meals

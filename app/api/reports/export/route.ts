@@ -13,6 +13,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
+    const termId = searchParams.get('termId') || undefined;
     const type = searchParams.get('type');
 
     if (type === 'meal-chart') {
@@ -22,11 +23,20 @@ export async function GET(req: Request) {
         orderBy: { name: 'asc' },
       });
 
+      let mealWhere: any = { messId: currentUser.messId };
+      if (termId) {
+        const term = await prisma.managerTerm.findUnique({ where: { id: termId } });
+        if (term) {
+          mealWhere.date = { gte: term.startDate, lte: term.endDate };
+        } else {
+          mealWhere.date = { startsWith: month };
+        }
+      } else {
+        mealWhere.date = { startsWith: month };
+      }
+
       const meals = await prisma.meal.findMany({
-        where: {
-          messId: currentUser.messId,
-          date: { startsWith: month },
-        },
+        where: mealWhere,
       });
 
       const settings = await prisma.messSetting.findUnique({
@@ -49,7 +59,7 @@ export async function GET(req: Request) {
       });
     }
 
-    const summary = await calculateMonthlySummary(currentUser.messId, month);
+    const summary = await calculateMonthlySummary(currentUser.messId, month, termId);
     const excelBuffer = generateMonthlySummaryExcel(summary);
     const uint8Array = new Uint8Array(excelBuffer);
 

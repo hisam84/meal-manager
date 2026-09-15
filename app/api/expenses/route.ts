@@ -13,10 +13,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const month = searchParams.get('month');
     const category = searchParams.get('category');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     const where: any = { messId: currentUser.messId };
 
-    if (month) {
+    if (startDate && endDate) {
+      where.date = { gte: startDate, lte: endDate };
+    } else if (month) {
       where.date = { startsWith: month };
     }
     if (category && category !== 'all') {
