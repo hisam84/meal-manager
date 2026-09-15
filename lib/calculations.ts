@@ -18,6 +18,23 @@ export interface MonthlySummaryResult {
     totalDinner: number;
     totalMealToday: number;
   };
+  tomorrowMealSummary?: {
+    date: string;
+    totalBreakfast: number;
+    totalLunch: number;
+    totalDinner: number;
+    totalMealTomorrow: number;
+    memberBreakdown: {
+      index: number;
+      userId: string;
+      name: string;
+      phone: string;
+      breakfast: number;
+      lunch: number;
+      dinner: number;
+      total: number;
+    }[];
+  };
   currentManager?: {
     name: string;
     phone: string;
@@ -384,6 +401,59 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalMealToday: Number((todayB + todayL + todayD).toFixed(2)),
   };
 
+  // Tomorrow's per-meal breakdown for Dashboard display
+  const tomorrowDateObj = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const tomorrowParts = tomorrowFormatter.formatToParts(tomorrowDateObj);
+  const getTomorrowPart = (type: string) => tomorrowParts.find((p) => p.type === type)?.value || '';
+  const tomorrowStr = `${getTomorrowPart('year')}-${getTomorrowPart('month')}-${getTomorrowPart('day')}`;
+
+  const tomorrowMeals = await prisma.meal.findMany({
+    where: {
+      messId,
+      date: tomorrowStr,
+    },
+  });
+
+  let tomorrowB = 0;
+  let tomorrowL = 0;
+  let tomorrowD = 0;
+
+  const tomorrowMemberBreakdown = users.map((u, index) => {
+    const userMeal = tomorrowMeals.find((m) => m.userId === u.id);
+    const b = userMeal?.breakfast || 0;
+    const l = userMeal?.lunch || 0;
+    const d = userMeal?.dinner || 0;
+    const total = (b * bw) + (l * lw) + (d * dw);
+    tomorrowB += b;
+    tomorrowL += l;
+    tomorrowD += d;
+    return {
+      index: index + 1,
+      userId: u.id,
+      name: u.name,
+      phone: u.phone,
+      breakfast: b,
+      lunch: l,
+      dinner: d,
+      total: Number(total.toFixed(2)),
+    };
+  });
+
+  const tomorrowMealSummary = {
+    date: tomorrowStr,
+    totalBreakfast: Number(tomorrowB.toFixed(2)),
+    totalLunch: Number(tomorrowL.toFixed(2)),
+    totalDinner: Number(tomorrowD.toFixed(2)),
+    totalMealTomorrow: Number((tomorrowB + tomorrowL + tomorrowD).toFixed(2)),
+    memberBreakdown: tomorrowMemberBreakdown,
+  };
+
   return {
     month,
     totalMembers: users.length,
@@ -396,6 +466,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalPayable: Number(totalPayable.toFixed(2)),
     managerMealDeduction: Number(managerMealDeduction.toFixed(2)),
     todayMealSummary,
+    tomorrowMealSummary,
     currentManager,
     memberSummaries,
   };
