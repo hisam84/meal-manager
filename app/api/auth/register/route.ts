@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, signToken, TOKEN_NAME } from '@/lib/auth';
+import { hashPassword, signToken, TOKEN_NAME, SESSION_MAX_AGE } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: SESSION_MAX_AGE,
     });
 
     return response;
