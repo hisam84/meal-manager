@@ -83,6 +83,7 @@ export async function POST(req: Request) {
       sameSite: 'lax',
       path: '/',
       maxAge: SESSION_MAX_AGE,
+      expires: new Date(Date.now() + SESSION_MAX_AGE * 1000),
     });
 
     return response;

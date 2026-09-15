@@ -347,7 +347,8 @@ export default function DashboardPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                   <tr>
-                    <th className="px-4 py-3 rounded-l-lg">মেম্বার</th>
+                    <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                    <th className="px-4 py-3">মেম্বার</th>
                     <th className="px-4 py-3">সকাল</th>
                     <th className="px-4 py-3">দুপুর</th>
                     <th className="px-4 py-3">রাত</th>
@@ -360,8 +361,11 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {displayMemberSummaries?.map((m: any) => (
+                  {displayMemberSummaries?.map((m: any, index: number) => (
                     <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                        {index + 1}
+                      </td>
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                         {m.name}
                         {m.userId === user?.id && <span className="ml-1 text-xs text-sky-600 font-bold">(আমি)</span>}

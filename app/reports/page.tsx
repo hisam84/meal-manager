@@ -570,7 +570,8 @@ export default function ReportsPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                 <tr>
-                  <th className="px-4 py-3 rounded-l-lg">মেম্বার নাম</th>
+                  <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                  <th className="px-4 py-3">মেম্বার নাম</th>
                   <th className="px-4 py-3">ফোন</th>
                   <th className="px-4 py-3">সকাল</th>
                   <th className="px-4 py-3">দুপুর</th>
@@ -585,8 +586,11 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {displayMemberSummaries?.map((m: any) => (
+                {displayMemberSummaries?.map((m: any, index: number) => (
                   <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                    <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                      {index + 1}
+                    </td>
                     <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
                     <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.breakfast}</td>
@@ -674,7 +678,8 @@ export default function ReportsPage() {
             <table className="w-full text-left text-sm border-collapse">
               <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
                 <tr>
-                  <th className="px-4 py-3 rounded-l-lg">মেম্বার নাম</th>
+                  <th className="px-4 py-3 rounded-l-lg w-12 text-center">#</th>
+                  <th className="px-4 py-3">মেম্বার নাম</th>
                   <th className="px-4 py-3">ফোন</th>
                   <th className="px-4 py-3">জমার তারিখ ও বিস্তারিত টাকা</th>
                   <th className="px-4 py-3">লেনদেন সংখ্যা</th>
@@ -682,12 +687,15 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {displayMembers.map((m) => {
+                {displayMembers.map((m, index) => {
                   const userPayments = payments.filter((p) => p.userId === m.id);
                   const userTotal = userPayments.reduce((sum, p) => sum + p.amount, 0);
 
                   return (
                     <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
+                        {index + 1}
+                      </td>
                       <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{m.name}</td>
                       <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
                       <td className="px-4 py-3 text-xs">

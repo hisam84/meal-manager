@@ -51,6 +51,72 @@ export function formatCurrency(amount: number): string {
   return `${amount < 0 ? '-' : ''}৳${formatted}`;
 }
 
+/**
+ * Helper to compute active consumed meal counts for a meal entry based on date and time cutoffs (Asia/Dhaka UTC+6):
+ * - Past dates (< todayStr): breakfast, lunch, and dinner are consumed.
+ * - Future dates (> todayStr): not consumed yet (0).
+ * - Today (=== todayStr):
+ *     - Breakfast (সকাল): counted if time >= 08:00
+ *     - Lunch (দুপুর): counted if time >= 11:30
+ *     - Dinner (রাত): counted if time >= 19:00
+ */
+export function getActiveMealCounts(
+  meal: { date: string; breakfast: number; lunch: number; dinner: number; total?: number },
+  weights: { bw: number; lw: number; dw: number },
+  now = new Date()
+) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value || '';
+
+  const todayStr = `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
+  const hour = parseInt(getPart('hour'), 10);
+  const minute = parseInt(getPart('minute'), 10);
+  const currentMinutes = hour * 60 + minute;
+
+  let isBreakfastCounted = false;
+  let isLunchCounted = false;
+  let isDinnerCounted = false;
+
+  if (meal.date < todayStr) {
+    isBreakfastCounted = true;
+    isLunchCounted = true;
+    isDinnerCounted = true;
+  } else if (meal.date === todayStr) {
+    isBreakfastCounted = currentMinutes >= 8 * 60; // সকাল ৮:০০ টার পরে
+    isLunchCounted = currentMinutes >= 11 * 60 + 30; // দুপুর ১১:৩০ টার পরে
+    isDinnerCounted = currentMinutes >= 19 * 60; // সন্ধ্যা ৭:০০ (১৯:০০) টার পরে
+  } else {
+    isBreakfastCounted = false;
+    isLunchCounted = false;
+    isDinnerCounted = false;
+  }
+
+  const activeBreakfast = isBreakfastCounted ? (meal.breakfast || 0) : 0;
+  const activeLunch = isLunchCounted ? (meal.lunch || 0) : 0;
+  const activeDinner = isDinnerCounted ? (meal.dinner || 0) : 0;
+  const activeTotal =
+    (activeBreakfast * weights.bw) +
+    (activeLunch * weights.lw) +
+    (activeDinner * weights.dw);
+
+  return {
+    breakfast: activeBreakfast,
+    lunch: activeLunch,
+    dinner: activeDinner,
+    total: activeTotal,
+  };
+}
+
 export async function calculateMonthlySummary(messId: string, month: string, termId?: string): Promise<MonthlySummaryResult> {
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -150,17 +216,35 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     }
   }
 
+  // Get weights
+  const bw = messSettings?.breakfastWeight ?? 1.0;
+  const lw = messSettings?.lunchWeight ?? 1.0;
+  const dw = messSettings?.dinnerWeight ?? 1.0;
+  const weights = { bw, lw, dw };
+
+  // Process meals based on real-time consumption cutoffs
+  const processedMeals = meals.map((m) => {
+    const active = getActiveMealCounts(m, weights);
+    return {
+      ...m,
+      activeBreakfast: active.breakfast,
+      activeLunch: active.lunch,
+      activeDinner: active.dinner,
+      activeTotal: active.total,
+    };
+  });
+
   // Aggregations
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalMeals = meals.reduce((sum, m) => sum + m.total, 0);
+  const totalMeals = processedMeals.reduce((sum, m) => sum + m.activeTotal, 0);
   const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
 
   // --- Manager Meal Deduction ---
   // Find manager's actual meal total within term
   let managerMealDeduction = 0;
   if (termManagerUserId && termMealDeductionType !== 'NONE') {
-    const managerMeals = meals.filter((m) => m.userId === termManagerUserId);
-    const managerTotalMeals = managerMeals.reduce((sum, m) => sum + m.total, 0);
+    const managerMeals = processedMeals.filter((m) => m.userId === termManagerUserId);
+    const managerTotalMeals = managerMeals.reduce((sum, m) => sum + m.activeTotal, 0);
 
     if (termMealDeductionType === 'ALL') {
       managerMealDeduction = managerTotalMeals;
@@ -178,11 +262,11 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   let totalPayable = 0;
 
   const memberSummaries = users.map((user) => {
-    const userMeals = meals.filter((m) => m.userId === user.id);
-    const bCount = userMeals.reduce((sum, m) => sum + m.breakfast, 0);
-    const lCount = userMeals.reduce((sum, m) => sum + m.lunch, 0);
-    const dCount = userMeals.reduce((sum, m) => sum + m.dinner, 0);
-    const userTotalMeals = userMeals.reduce((sum, m) => sum + m.total, 0);
+    const userMeals = processedMeals.filter((m) => m.userId === user.id);
+    const bCount = userMeals.reduce((sum, m) => sum + m.activeBreakfast, 0);
+    const lCount = userMeals.reduce((sum, m) => sum + m.activeLunch, 0);
+    const dCount = userMeals.reduce((sum, m) => sum + m.activeDinner, 0);
+    const userTotalMeals = userMeals.reduce((sum, m) => sum + m.activeTotal, 0);
 
     // For the manager, subtract their meal deduction from billable meals
     let billableMeals = userTotalMeals;
@@ -217,7 +301,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
       breakfast: bCount,
       lunch: lCount,
       dinner: dCount,
-      totalMeals: userTotalMeals,
+      totalMeals: Number(userTotalMeals.toFixed(2)),
       billableMeals: Number(billableMeals.toFixed(2)),
       mealCost: Number(mealCost.toFixed(2)),
       cookBill: Number(cookBillAmount.toFixed(2)),
