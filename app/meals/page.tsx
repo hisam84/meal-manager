@@ -19,7 +19,8 @@ import {
   Sparkles,
   ArrowRight,
   Filter,
-  Plus
+  Plus,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,6 +32,7 @@ export default function MealsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
   const [managerTerms, setManagerTerms] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
 
   // Selection mode: 'TERM' (default - manager based) or 'MONTH' (calendar month)
   const [selectedTermId, setSelectedTermId] = useState<string>('');
@@ -78,6 +80,21 @@ export default function MealsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  const fetchSummary = (termId?: string, m?: string) => {
+    let url = '/api/summary';
+    if (termId && termId !== 'MONTH_VIEW') {
+      url += `?termId=${termId}`;
+    } else {
+      url += `?month=${m || month}`;
+    }
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) setSummary(data);
+      })
+      .catch((err) => console.error(err));
+  };
+
   const fetchManagerTermsAndInit = async () => {
     try {
       const res = await fetch('/api/manager-terms');
@@ -92,10 +109,12 @@ export default function MealsPage() {
           const defaultTerm = currentActive || data[0];
           setSelectedTermId(defaultTerm.id);
           fetchMealsByDateRange(defaultTerm.startDate, defaultTerm.endDate);
+          fetchSummary(defaultTerm.id);
         } else {
           // Fallback to current month if no manager terms exist
           setSelectedTermId('MONTH_VIEW');
           fetchMealsByMonth(month);
+          fetchSummary('MONTH_VIEW', month);
         }
       }
     } catch (err) {
@@ -143,10 +162,12 @@ export default function MealsPage() {
     setSelectedTermId(termId);
     if (termId === 'MONTH_VIEW') {
       fetchMealsByMonth(month);
+      fetchSummary('MONTH_VIEW', month);
     } else {
       const term = managerTerms.find((t) => t.id === termId);
       if (term) {
         fetchMealsByDateRange(term.startDate, term.endDate);
+        fetchSummary(term.id);
       }
     }
   };
@@ -155,6 +176,7 @@ export default function MealsPage() {
     setMonth(m);
     if (selectedTermId === 'MONTH_VIEW') {
       fetchMealsByMonth(m);
+      fetchSummary('MONTH_VIEW', m);
     }
   };
 
@@ -329,8 +351,10 @@ export default function MealsPage() {
 
       if (activeTerm) {
         fetchMealsByDateRange(activeTerm.startDate, activeTerm.endDate);
+        fetchSummary(activeTerm.id);
       } else {
         fetchMealsByMonth(month);
+        fetchSummary('MONTH_VIEW', month);
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -557,6 +581,7 @@ export default function MealsPage() {
                 ) : (
                   (isAdminOrManager ? members : members.filter((m) => m.id === user?.id)).map((member, index) => {
                     const userMeals = meals.filter((m) => m.userId === member.id);
+                    const memberSummary = summary?.memberSummaries?.find((s: any) => s.userId === member.id);
 
                     // Count total ONLY for meals up to today within the visible dates
                     const memberTotalMeals = userMeals
@@ -571,8 +596,19 @@ export default function MealsPage() {
                         </td>
 
                         {/* Member Name */}
-                        <td className="px-3 py-2 text-left font-bold text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800 sticky left-10 bg-white dark:bg-slate-900 z-10 shadow-sm truncate">
-                          {member.name}
+                        <td className="px-3 py-2 text-left font-bold text-slate-900 dark:text-white border-r border-slate-200 dark:border-slate-800 sticky left-10 bg-white dark:bg-slate-900 z-10 shadow-sm">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="truncate">{member.name}</span>
+                            {memberSummary?.isLowBalance && (
+                              <span
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80 dark:border-rose-800 shrink-0"
+                                title={`৫০৳ মিলরেট হিসেবে অবশিষ্ট ব্যালেন্স: ৳${memberSummary.estimatedRemainingBalance} (প্রায় ${memberSummary.estimatedRemainingMeals} মিল বাকি)`}
+                              >
+                                <AlertTriangle className="w-2.5 h-2.5" />
+                                লো ব্যালেন্স ({memberSummary.estimatedRemainingMeals} মিল)
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Days Grid Cells */}
@@ -642,6 +678,27 @@ export default function MealsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {(() => {
+              const selectedMemberSummary = summary?.memberSummaries?.find((s: any) => s.userId === selectedCell.member.id);
+              if (!selectedMemberSummary?.isLowBalance) return null;
+
+              return (
+                <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80 p-3.5 rounded-xl flex items-center gap-3 text-xs text-rose-700 dark:text-rose-300">
+                  <div className="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold block text-rose-800 dark:text-rose-200">
+                      ⚠️ লো ব্যালেন্স সতর্কবার্তা (৫০৳ রেট অনুমিত)
+                    </span>
+                    <span className="text-slate-600 dark:text-slate-300 mt-0.5 block">
+                      এই মেম্বারের ৫০৳ রেটে অবশিষ্ট ব্যালেন্স: <strong className="text-rose-600 dark:text-rose-400">৳{selectedMemberSummary.estimatedRemainingBalance}</strong> (প্রায় <strong>{selectedMemberSummary.estimatedRemainingMeals}</strong> টি মিল বাকি)। নতুন মিল যুক্ত করার পূর্বে টাকা জমা নেওয়া নিশ্চিত করুন।
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {!isCellEditable ? (
               /* Read-Only View */

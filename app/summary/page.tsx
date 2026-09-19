@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/components/PageShell';
-import { PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Printer } from 'lucide-react';
+import { PieChart, ArrowUpRight, ArrowDownRight, CheckCircle2, Printer, AlertTriangle } from 'lucide-react';
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -183,7 +183,20 @@ export default function SummaryPage() {
                       <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{m.name}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{m.name}</span>
+                          {m.isLowBalance && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80 dark:border-rose-800 shrink-0"
+                              title={`৫০৳ মিলরেট হিসেবে অবশিষ্ট ব্যালেন্স: ৳${m.estimatedRemainingBalance} (প্রায় ${m.estimatedRemainingMeals} মিল বাকি)`}
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              লো ব্যালেন্স ({m.estimatedRemainingMeals} মিল)
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.breakfast}</td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{m.lunch}</td>

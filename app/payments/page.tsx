@@ -33,6 +33,7 @@ export default function PaymentsPage() {
 
   const [payments, setPayments] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
   // Add Form states
@@ -71,6 +72,7 @@ export default function PaymentsPage() {
           setUser(data.user);
           fetchMembers();
           fetchPayments(month);
+          fetchSummary(month);
 
           // If user is manager with terms, auto-default form date to within their active term if today is outside
           if (data.user && data.user.role !== 'SUPERADMIN' && data.user.role !== 'ADMIN' && data.user.managerTerms?.length > 0) {
@@ -126,6 +128,15 @@ export default function PaymentsPage() {
           }
         }
       });
+  };
+
+  const fetchSummary = (m: string) => {
+    fetch(`/api/summary?month=${m}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) setSummary(data);
+      })
+      .catch((err) => console.error(err));
   };
 
   const handleLogout = async () => {
@@ -220,6 +231,7 @@ export default function PaymentsPage() {
       setEditingPayment(null);
       setMessage({ type: 'success', text: 'পেমেন্ট রেকর্ড সফলভাবে এডিট করা হয়েছে এবং এডিট হিস্ট্রিতে সংরক্ষিত হয়েছে।' });
       fetchPayments(month);
+      fetchSummary(month);
     } catch (err: any) {
       setEditError(err.message);
     } finally {
@@ -235,6 +247,7 @@ export default function PaymentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete payment');
       fetchPayments(month);
+      fetchSummary(month);
     } catch (err: any) {
       alert(err.message);
     }
@@ -287,6 +300,7 @@ export default function PaymentsPage() {
             onChange={(e) => {
               setMonth(e.target.value);
               fetchPayments(e.target.value);
+              fetchSummary(e.target.value);
             }}
             className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-sm font-semibold"
           />
@@ -400,22 +414,38 @@ export default function PaymentsPage() {
             </div>
 
             {/* Live Balance Summary Calculation */}
-            {targetUserId && (
-              <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-                <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                  <Coins className="w-4 h-4 text-purple-600" />
-                  <span>
-                    সিলেক্টকৃত মেম্বারের আগের মোট জমা: <strong className="text-slate-900 dark:text-white">৳{targetMemberPreviousTotal.toLocaleString('bn-BD')}</strong>
-                  </span>
-                </div>
+            {targetUserId && (() => {
+              const targetMemberSummary = summary?.memberSummaries?.find((s: any) => s.userId === targetUserId);
+              return (
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                  <div className="flex items-center gap-2.5 font-medium text-slate-700 dark:text-slate-300">
+                    <Coins className="w-4 h-4 text-purple-600 shrink-0" />
+                    <div>
+                      <span>
+                        সিলেক্টকৃত মেম্বারের আগের মোট জমা: <strong className="text-slate-900 dark:text-white">৳{targetMemberPreviousTotal.toLocaleString('bn-BD')}</strong>
+                      </span>
+                      {targetMemberSummary && (
+                        <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          ৫০৳ রেটে বাকি ব্যালেন্স: <strong className={targetMemberSummary.isLowBalance ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'}>৳{targetMemberSummary.estimatedRemainingBalance}</strong> (প্রায় {targetMemberSummary.estimatedRemainingMeals} টি মিল বাকি)
+                          {targetMemberSummary.isLowBalance && (
+                            <span className="ml-1.5 inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-400 font-bold">
+                              <AlertTriangle className="w-3 h-3" />
+                              (লো ব্যালেন্স)
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-4">
-                  <span className="text-purple-700 dark:text-purple-300 font-bold">
-                    নতুন এন্ট্রি সহ মোট জমা দাঁড়াবে: <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">৳{targetMemberCombinedTotal.toLocaleString('bn-BD')}</span>
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-purple-700 dark:text-purple-300 font-bold">
+                      নতুন এন্ট্রি সহ মোট জমা দাঁড়াবে: <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">৳{targetMemberCombinedTotal.toLocaleString('bn-BD')}</span>
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div className="flex justify-end">
               <button
@@ -439,7 +469,7 @@ export default function PaymentsPage() {
               <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <span>মেম্বারদের মোট ব্যালেন্স ও জমা সামারি ({month})</span>
             </h3>
-            <p className="text-xs text-slate-500">প্রতিটি মেম্বারের মোট জমা টাকার হিসাব এবং পৃথক পেমেন্ট হিস্ট্রি</p>
+            <p className="text-xs text-slate-500">প্রতিটি মেম্বারের মোট জমা টাকার হিসাব এবং ৫০৳ মিলরেট অনুমিত লো ব্যালেন্স স্ট্যাটাস</p>
           </div>
 
           <span className="text-xs text-purple-600 dark:text-purple-400 font-extrabold bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-purple-800">
@@ -451,6 +481,7 @@ export default function PaymentsPage() {
           {displayMembers.map((m, index) => {
             const memberPaymentsList = payments.filter((p) => p.userId === m.id);
             const memberTotalPaid = memberPaymentsList.reduce((sum, p) => sum + p.amount, 0);
+            const memberSummary = summary?.memberSummaries?.find((s: any) => s.userId === m.id);
 
             return (
               <div
@@ -463,13 +494,31 @@ export default function PaymentsPage() {
                       {index + 1}
                     </span>
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{m.name}</h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm">{m.name}</h4>
+                        {memberSummary?.isLowBalance && (
+                          <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shrink-0"
+                            title={`৫০৳ মিলরেট হিসেবে অবশিষ্ট ব্যালেন্স: ৳${memberSummary.estimatedRemainingBalance} (প্রায় ${memberSummary.estimatedRemainingMeals} মিল বাকি)`}
+                          >
+                            <AlertTriangle className="w-2.5 h-2.5" />
+                            লো ব্যালেন্স ({memberSummary.estimatedRemainingMeals} মিল)
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[11px] text-slate-500 font-medium">{m.phone}</span>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                    ৳{memberTotalPaid.toLocaleString('bn-BD')}
-                  </span>
+                  <div className="text-right">
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 inline-block">
+                      ৳{memberTotalPaid.toLocaleString('bn-BD')}
+                    </span>
+                    {memberSummary && (
+                      <span className="text-[10px] text-slate-500 block mt-0.5">
+                        ৫০৳ রেটে বাকি: <strong className={memberSummary.isLowBalance ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300'}>৳{memberSummary.estimatedRemainingBalance}</strong>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">

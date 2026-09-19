@@ -57,6 +57,9 @@ export interface MonthlySummaryResult {
     paid: number;
     balance: number;
     status: 'Receivable' | 'Payable' | 'Settled';
+    estimatedRemainingBalance: number;
+    estimatedRemainingMeals: number;
+    isLowBalance: boolean;
   }[];
 }
 
@@ -301,6 +304,13 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     const paid = userPayments.reduce((sum, p) => sum + p.amount, 0);
     const balance = paid - (mealCost + cookBillAmount);
 
+    // 50 Tk fixed meal rate calculation for Low Balance Alert
+    const estimatedMealRate = 50;
+    const estimatedUsedCost = billableMeals * estimatedMealRate;
+    const estimatedRemainingBalance = paid - estimatedUsedCost;
+    const estimatedRemainingMeals = Math.max(0, Math.floor(estimatedRemainingBalance / estimatedMealRate));
+    const isLowBalance = estimatedRemainingBalance < estimatedMealRate;
+
     let status: 'Receivable' | 'Payable' | 'Settled' = 'Settled';
     if (balance > 0.01) {
       status = 'Receivable';
@@ -325,6 +335,9 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
       paid: Number(paid.toFixed(2)),
       balance: Number(balance.toFixed(2)),
       status,
+      estimatedRemainingBalance: Number(estimatedRemainingBalance.toFixed(2)),
+      estimatedRemainingMeals,
+      isLowBalance,
     };
   });
 
