@@ -304,12 +304,12 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     const paid = userPayments.reduce((sum, p) => sum + p.amount, 0);
     const balance = paid - (mealCost + cookBillAmount);
 
-    // 50 Tk fixed meal rate calculation for Low Balance Alert
+    // 50 Tk fixed default meal rate calculation for Low Balance Alert (Alert when balance <= 100 Tk)
     const estimatedMealRate = 50;
     const estimatedUsedCost = billableMeals * estimatedMealRate;
     const estimatedRemainingBalance = paid - estimatedUsedCost;
     const estimatedRemainingMeals = Math.max(0, Math.floor(estimatedRemainingBalance / estimatedMealRate));
-    const isLowBalance = estimatedRemainingBalance < estimatedMealRate;
+    const isLowBalance = estimatedRemainingBalance <= 100;
 
     let status: 'Receivable' | 'Payable' | 'Settled' = 'Settled';
     if (balance > 0.01) {

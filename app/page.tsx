@@ -220,7 +220,7 @@ export default function DashboardPage() {
 
           {/* Admin / Manager KPI Grid */}
           {isAdminOrManager ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                   <span className="text-xs font-semibold uppercase">মোট মেম্বার</span>
@@ -238,6 +238,16 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
                   {summary?.totalMeals || 0} টি
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-semibold uppercase">মোট জমা</span>
+                  <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  ৳{summary?.totalPayments?.toLocaleString('bn-BD') || 0}
                 </div>
               </div>
 
@@ -282,10 +292,10 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                        <span>⚠️ লো ব্যালেন্স এলার্ট (৫০৳ মিলরেট অনুমিত)</span>
+                        <span>⚠️ লো ব্যালেন্স এলার্ট (৫০৳ ডিফল্ট মিলরেট অনুমিত)</span>
                       </h4>
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                        আপনার জমা কৃত টাকা শেষ হওয়ার পথে! ৫০৳ নির্দিষ্ট রেট অনুযায়ী অবশিষ্ট ব্যালেন্স: <strong className="font-bold text-rose-600 dark:text-rose-400">৳{mySummary.estimatedRemainingBalance}</strong> (আনুমানিক <strong className="font-bold text-slate-900 dark:text-white">{mySummary.estimatedRemainingMeals}</strong> টি মিল বাকি)। দয়া করে দ্রুত জমা দিন।
+                        আপনার জমা টাকা শেষ হওয়ার পথে! ৫০৳ ডিফল্ট মিলরেট অনুযায়ী অবশিষ্ট ব্যালেন্স: <strong className="font-bold text-rose-600 dark:text-rose-400">৳{mySummary.estimatedRemainingBalance}</strong> (আনুমানিক <strong className="font-bold text-slate-900 dark:text-white">{mySummary.estimatedRemainingMeals}</strong> টি মিল বাকি)। দয়া করে দ্রুত টাকা জমা দিন।
                       </p>
                     </div>
                   </div>
@@ -417,7 +427,7 @@ export default function DashboardPage() {
                           {m.isLowBalance && (
                             <span
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300/60 dark:border-rose-800 shrink-0"
-                              title={`৫০৳ মিলরেট অনুমিত অবশিষ্ট ব্যালেন্স: ৳${m.estimatedRemainingBalance} (প্রায় ${m.estimatedRemainingMeals} টি মিল বাকি)`}
+                              title={`৫০৳ ডিফল্ট মিলরেটে অবশিষ্ট ব্যালেন্স: ৳${m.estimatedRemainingBalance} (প্রায় ${m.estimatedRemainingMeals} টি মিল বাকি)`}
                             >
                               <AlertTriangle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
                               লো ব্যালেন্স ({m.estimatedRemainingMeals} মিল)
