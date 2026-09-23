@@ -24,7 +24,8 @@ import {
   ArrowRight,
   X,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Banknote
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -78,6 +79,10 @@ export default function DashboardPage() {
   const displayMemberSummaries = isAdminOrManager
     ? summary?.memberSummaries
     : summary?.memberSummaries?.filter((m: any) => m.userId === user?.id);
+
+  const availableBalance = typeof summary?.availableBalance === 'number'
+    ? summary.availableBalance
+    : ((summary?.totalPayments || 0) - (summary?.totalExpenses || 0));
 
   return (
     <PageShell user={user} onLogout={handleLogout} title="ড্যাশবোর্ড">
@@ -220,7 +225,7 @@ export default function DashboardPage() {
 
           {/* Admin / Manager KPI Grid */}
           {isAdminOrManager ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                   <span className="text-xs font-semibold uppercase">মোট মেম্বার</span>
@@ -258,6 +263,18 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
                   ৳{summary?.totalExpenses?.toLocaleString('bn-BD') || 0}
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-semibold uppercase">অবশিষ্ট ব্যালেন্স</span>
+                  <Banknote className={`w-5 h-5 ${availableBalance >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`} />
+                </div>
+                <div className={`text-2xl font-bold ${
+                  availableBalance >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'
+                }`}>
+                  {availableBalance < 0 ? '-' : ''}৳{Math.abs(availableBalance).toLocaleString('bn-BD')}
                 </div>
               </div>
 

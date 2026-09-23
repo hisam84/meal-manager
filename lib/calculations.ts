@@ -8,6 +8,7 @@ export interface MonthlySummaryResult {
   totalCookBill: number;
   mealRate: number;
   totalPayments: number;
+  availableBalance: number;
   totalReceivable: number;
   totalPayable: number;
   managerMealDeduction: number; // meals deducted from total for rate calculation
@@ -475,6 +476,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
     totalCookBill: Number(totalCookBill.toFixed(2)),
     mealRate: Number(mealRate.toFixed(2)),
     totalPayments: Number(totalPayments.toFixed(2)),
+    availableBalance: Number((totalPayments - totalExpenses).toFixed(2)),
     totalReceivable: Number(totalReceivable.toFixed(2)),
     totalPayable: Number(totalPayable.toFixed(2)),
     managerMealDeduction: Number(managerMealDeduction.toFixed(2)),

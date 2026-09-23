@@ -403,6 +403,13 @@ export default function ReportsPage() {
             <span className="px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-emerald-600 font-bold">
               মোট জমা: ৳{totalPaymentsAmount.toLocaleString('bn-BD')}
             </span>
+            <span className={`px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 font-bold ${
+              (totalPaymentsAmount - (summary?.totalExpenses || 0)) >= 0
+                ? 'text-teal-600 dark:text-teal-400'
+                : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              অবশিষ্ট ব্যালেন্স: {(totalPaymentsAmount - (summary?.totalExpenses || 0)) < 0 ? '-' : ''}৳{Math.abs(totalPaymentsAmount - (summary?.totalExpenses || 0)).toLocaleString('bn-BD')}
+            </span>
           </div>
         </div>
       ) : (

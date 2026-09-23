@@ -93,7 +93,7 @@ export default function SummaryPage() {
           </div>
 
           {/* Overview KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
               <span className="text-xs font-semibold text-slate-500 uppercase">মোট মিল</span>
               <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
@@ -119,6 +119,17 @@ export default function SummaryPage() {
               <span className="text-xs font-semibold text-slate-500 uppercase">মোট সংগৃহীত জমা</span>
               <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                 ৳{summary?.totalPayments?.toLocaleString('bn-BD') || 0}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <span className="text-xs font-semibold text-slate-500 uppercase">অবশিষ্ট ব্যালেন্স</span>
+              <div className={`text-2xl font-bold mt-1 ${
+                ((summary?.totalPayments || 0) - (summary?.totalExpenses || 0)) >= 0
+                  ? 'text-teal-600 dark:text-teal-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}>
+                {((summary?.totalPayments || 0) - (summary?.totalExpenses || 0)) < 0 ? '-' : ''}৳{Math.abs((summary?.totalPayments || 0) - (summary?.totalExpenses || 0)).toLocaleString('bn-BD')}
               </div>
             </div>
           </div>
