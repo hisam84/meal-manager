@@ -244,7 +244,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   const weights = { bw, lw, dw };
 
   // Process meals based on real-time consumption cutoffs
-  const processedMeals = meals.map((m) => {
+  const processedMeals = meals.map((m: any) => {
     const active = getActiveMealCounts(m, weights);
     return {
       ...m,
@@ -256,16 +256,16 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   });
 
   // Aggregations
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalMeals = processedMeals.reduce((sum, m) => sum + m.activeTotal, 0);
-  const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalExpenses = expenses.reduce((sum: number, e: any) => sum + e.amount, 0);
+  const totalMeals = processedMeals.reduce((sum: number, m: any) => sum + m.activeTotal, 0);
+  const totalPayments = payments.reduce((sum: number, p: any) => sum + p.amount, 0);
 
   // --- Manager Meal Deduction ---
   // Find manager's actual meal total within term
   let managerMealDeduction = 0;
   if (termManagerUserId && termMealDeductionType !== 'NONE') {
-    const managerMeals = processedMeals.filter((m) => m.userId === termManagerUserId);
-    const managerTotalMeals = managerMeals.reduce((sum, m) => sum + m.activeTotal, 0);
+    const managerMeals = processedMeals.filter((m: any) => m.userId === termManagerUserId);
+    const managerTotalMeals = managerMeals.reduce((sum: number, m: any) => sum + m.activeTotal, 0);
 
     if (termMealDeductionType === 'ALL') {
       managerMealDeduction = managerTotalMeals;
@@ -282,12 +282,12 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   let totalReceivable = 0;
   let totalPayable = 0;
 
-  const memberSummaries = users.map((user) => {
-    const userMeals = processedMeals.filter((m) => m.userId === user.id);
-    const bCount = userMeals.reduce((sum, m) => sum + m.activeBreakfast, 0);
-    const lCount = userMeals.reduce((sum, m) => sum + m.activeLunch, 0);
-    const dCount = userMeals.reduce((sum, m) => sum + m.activeDinner, 0);
-    const userTotalMeals = userMeals.reduce((sum, m) => sum + m.activeTotal, 0);
+  const memberSummaries = users.map((user: any) => {
+    const userMeals = processedMeals.filter((m: any) => m.userId === user.id);
+    const bCount = userMeals.reduce((sum: number, m: any) => sum + m.activeBreakfast, 0);
+    const lCount = userMeals.reduce((sum: number, m: any) => sum + m.activeLunch, 0);
+    const dCount = userMeals.reduce((sum: number, m: any) => sum + m.activeDinner, 0);
+    const userTotalMeals = userMeals.reduce((sum: number, m: any) => sum + m.activeTotal, 0);
 
     // For the manager, subtract their meal deduction from billable meals
     let billableMeals = userTotalMeals;
@@ -301,8 +301,8 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
 
     const mealCost = billableMeals * mealRate;
     const cookBillAmount = parsedMemberCookBills[user.id] || (users.length > 0 ? Number((totalCookBill / users.length).toFixed(2)) : 0);
-    const userPayments = payments.filter((p) => p.userId === user.id);
-    const paid = userPayments.reduce((sum, p) => sum + p.amount, 0);
+    const userPayments = payments.filter((p: any) => p.userId === user.id);
+    const paid = userPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
     const balance = paid - (mealCost + cookBillAmount);
 
     // 50 Tk fixed default meal rate calculation for Low Balance Alert (Alert when balance <= 100 Tk)
@@ -380,7 +380,7 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
       endDate: activeTermObj.endDate,
     };
   } else {
-    const managerRoleUser = users.find((u) => u.role === 'MANAGER');
+    const managerRoleUser = users.find((u: any) => u.role === 'MANAGER');
     if (managerRoleUser) {
       currentManager = {
         name: managerRoleUser.name,
@@ -438,8 +438,8 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   let tomorrowL = 0;
   let tomorrowD = 0;
 
-  const tomorrowMemberBreakdown = users.map((u, index) => {
-    const userMeal = tomorrowMeals.find((m) => m.userId === u.id);
+  const tomorrowMemberBreakdown = users.map((u: any, index: number) => {
+    const userMeal = tomorrowMeals.find((m: any) => m.userId === u.id);
     const b = userMeal?.breakfast || 0;
     const l = userMeal?.lunch || 0;
     const d = userMeal?.dinner || 0;
