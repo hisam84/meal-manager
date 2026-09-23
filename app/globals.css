@@ -50,7 +50,7 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Print CSS for Clean A4 Landscape Printing */
+/* Print CSS for Clean A4 Landscape Printing - High Contrast & Optimized */
 @media print {
   @page {
     size: A4 landscape;
@@ -60,25 +60,32 @@ html {
   html,
   body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     margin: 0 !important;
     padding: 0 !important;
     font-size: 8.5pt !important;
+    font-family: inherit;
   }
 
-  /* Completely remove non-printable elements from document layout flow (takes 0 space) */
+  /* Completely remove non-printable elements and ALL low balance tags */
   aside,
   nav,
   header,
   footer,
   .no-print,
   .no-print *,
+  .print\:hidden,
+  .low-balance-badge,
+  .low-balance-badge *,
+  [data-no-print],
+  [data-no-print] *,
   button,
   input,
   select {
     display: none !important;
+    visibility: hidden !important;
   }
 
   /* Reset main layout wrappers so they don't introduce offset or padding */
@@ -101,6 +108,17 @@ html {
     visibility: visible !important;
   }
 
+  /* Strict: Never show low-balance badge or no-print inside print container/section */
+  .print-container .no-print,
+  .print-section .no-print,
+  .print-container .low-balance-badge,
+  .print-section .low-balance-badge,
+  .print-container .print\:hidden,
+  .print-section .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   /* Print Wrapper to position content at the very top of print page */
   .print-container {
     position: absolute !important;
@@ -117,7 +135,7 @@ html {
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    margin: 0 0 15px 0 !important;
+    margin: 0 0 12px 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
@@ -126,53 +144,106 @@ html {
     break-inside: auto !important;
   }
 
-  /* Critical: Override dark mode text colors in print so text is never white-on-white */
-  .print-container,
-  .print-container *,
-  .print-section,
-  .print-section * {
-    color: #000000 !important;
-    text-shadow: none !important;
-  }
-
-  /* Clean print table styling */
+  /* Clean print table styling with crisp 1px borders and high legibility */
   .print-section table,
   .print-container table {
     width: 100% !important;
     border-collapse: collapse !important;
     font-size: 8pt !important;
     margin-top: 6px !important;
+    background-color: #ffffff !important;
   }
 
   .print-section th,
   .print-section td,
   .print-container th,
   .print-container td {
-    border: 1px solid #475569 !important;
+    border: 1px solid #cbd5e1 !important;
     padding: 4px 6px !important;
-    color: #000000 !important;
+    color: #0f172a !important;
     background-color: #ffffff !important;
+    text-shadow: none !important;
   }
 
   .print-section th,
   .print-container th {
     background-color: #f1f5f9 !important;
-    font-weight: bold !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
+    border-bottom: 2px solid #94a3b8 !important;
   }
 
   .print-section tfoot td,
   .print-container tfoot td {
     background-color: #f8fafc !important;
-    font-weight: bold !important;
-    color: #000000 !important;
-    border-top: 2px solid #000000 !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    border-top: 2px solid #0f172a !important;
+    border-bottom: 2px solid #0f172a !important;
   }
 
+  /* Eliminate all dark oval background blobs in status badges in print */
+  .print-container span[class*="rounded-full"],
+  .print-section span[class*="rounded-full"],
+  .print-container span[class*="rounded"],
+  .print-section span[class*="rounded"],
+  .status-badge {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: 700 !important;
+    display: inline !important;
+  }
+
+  /* Clean readable status colors for print */
+  .status-receivable,
+  span:has(> [class*="text-emerald"]),
+  .print-container .text-emerald-700,
+  .print-section .text-emerald-700,
+  .print-container .text-emerald-600,
+  .print-section .text-emerald-600 {
+    color: #15803d !important; /* crisp dark green */
+    font-weight: 700 !important;
+  }
+
+  .status-payable,
+  span:has(> [class*="text-rose"]),
+  .print-container .text-rose-700,
+  .print-section .text-rose-700,
+  .print-container .text-rose-600,
+  .print-section .text-rose-600 {
+    color: #b91c1c !important; /* crisp dark red */
+    font-weight: 700 !important;
+  }
+
+  .status-settled,
+  .print-container .text-slate-600,
+  .print-section .text-slate-600 {
+    color: #334155 !important; /* slate */
+    font-weight: 600 !important;
+  }
+
+  /* Reset sticky columns in print mode to avoid fixed overlaps */
   .print-section .sticky,
   .print-container .sticky {
     position: static !important;
+    background-color: transparent !important;
+  }
+
+  /* Prevent row splits across page cuts */
+  .print-section tr,
+  .print-container tr {
+    page-break-inside: avoid !important;
+    break-inside: auto !important;
+  }
+
+  .print-section thead,
+  .print-container thead {
+    display: table-header-group !important;
   }
 }
+
 
 

@@ -633,17 +633,17 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {m.status === 'Receivable' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                        <span className="status-receivable inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 print:bg-transparent print:p-0 print:border-none text-emerald-700 dark:text-emerald-300 print:text-emerald-800">
                           পাওনা
                         </span>
                       )}
                       {m.status === 'Payable' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                        <span className="status-payable inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 print:bg-transparent print:p-0 print:border-none text-rose-700 dark:text-rose-300 print:text-rose-800">
                           দেনা
                         </span>
                       )}
                       {m.status === 'Settled' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        <span className="status-settled inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 print:bg-transparent print:p-0 print:border-none text-slate-600 dark:text-slate-400 print:text-slate-700">
                           পরিশোধিত
                         </span>
                       )}

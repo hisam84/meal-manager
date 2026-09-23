@@ -280,7 +280,8 @@ export default function SummaryPage() {
                           <span>{m.name}</span>
                           {m.isLowBalance && (
                             <span
-                              className="no-print inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80 dark:border-rose-800 shrink-0"
+                              data-no-print="true"
+                              className="low-balance-badge no-print print:hidden inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80 dark:border-rose-800 shrink-0"
                               title={`৫০৳ মিলরেট হিসেবে অবশিষ্ট ব্যালেন্স: ৳${m.estimatedRemainingBalance} (প্রায় ${m.estimatedRemainingMeals} মিল বাকি)`}
                             >
                               <AlertTriangle className="w-2.5 h-2.5" />
@@ -289,30 +290,30 @@ export default function SummaryPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-slate-500 print:text-black text-xs">{m.phone}</td>
-                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-black text-center">{m.breakfast}</td>
-                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-black text-center">{m.lunch}</td>
-                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-black text-center">{m.dinner}</td>
-                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-white print:text-black text-center">{m.totalMeals}</td>
-                      <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 print:text-black text-right">৳{m.mealCost}</td>
-                      <td className="px-3 py-2.5 text-sky-600 dark:text-sky-400 print:text-black text-right">৳{m.cookBill || 0}</td>
-                      <td className="px-3 py-2.5 font-semibold text-emerald-600 dark:text-emerald-400 print:text-black text-right">৳{m.paid}</td>
-                      <td className={`px-3 py-2.5 font-extrabold print:text-black text-right ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <td className="px-3 py-2.5 text-slate-500 print:text-slate-900 text-xs">{m.phone}</td>
+                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-slate-900 text-center">{m.breakfast}</td>
+                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-slate-900 text-center">{m.lunch}</td>
+                      <td className="px-2 py-2.5 text-slate-600 dark:text-slate-400 print:text-slate-900 text-center">{m.dinner}</td>
+                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-white print:text-slate-900 text-center">{m.totalMeals}</td>
+                      <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 print:text-slate-900 text-right">৳{m.mealCost}</td>
+                      <td className="px-3 py-2.5 text-sky-600 dark:text-sky-400 print:text-slate-900 text-right">৳{m.cookBill || 0}</td>
+                      <td className="px-3 py-2.5 font-semibold text-emerald-600 dark:text-emerald-400 print:text-slate-900 text-right">৳{m.paid}</td>
+                      <td className={`px-3 py-2.5 font-extrabold print:text-slate-900 text-right ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {m.balance < 0 ? '-' : ''}৳{Math.abs(m.balance)}
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         {m.status === 'Receivable' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 print:bg-transparent print:border print:border-black text-emerald-700 dark:text-emerald-300 print:text-black">
+                          <span className="status-receivable inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 print:bg-transparent print:p-0 print:border-none text-emerald-700 dark:text-emerald-300 print:text-emerald-800">
                             পাওনা
                           </span>
                         )}
                         {m.status === 'Payable' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 print:bg-transparent print:border print:border-black text-rose-700 dark:text-rose-300 print:text-black">
+                          <span className="status-payable inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 print:bg-transparent print:p-0 print:border-none text-rose-700 dark:text-rose-300 print:text-rose-800">
                             দেনা
                           </span>
                         )}
                         {m.status === 'Settled' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 print:bg-transparent print:border print:border-black text-slate-600 dark:text-slate-400 print:text-black">
+                          <span className="status-settled inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 print:bg-transparent print:p-0 print:border-none text-slate-600 dark:text-slate-400 print:text-slate-700">
                             পরিশোধিত
                           </span>
                         )}
