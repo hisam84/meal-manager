@@ -332,7 +332,7 @@ export default function MembersPage() {
                   className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-sky-600/20 transition-all flex items-center gap-1.5"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>ম্যানেজার নির্বাচন পপ-আপ</span>
+                  <span>ম্যানেজার নির্বাচন</span>
                 </button>
 
                 <button
@@ -340,7 +340,7 @@ export default function MembersPage() {
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>নতুন মেম্বার যুক্ত পপ-আপ</span>
+                  <span>নতুন মেম্বার যুক্ত</span>
                 </button>
               </div>
             </div>
