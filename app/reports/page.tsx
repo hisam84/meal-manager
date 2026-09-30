@@ -45,6 +45,7 @@ export default function ReportsPage() {
 
   // Selective Printing State
   const [activePrintSection, setActivePrintSection] = useState<string | null>(null);
+  const [expenseViewMode, setExpenseViewMode] = useState<'combined' | 'detailed'>('combined');
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -284,6 +285,62 @@ export default function ReportsPage() {
     const cat = e.category || 'অন্যান্য';
     expensesByCategory[cat] = (expensesByCategory[cat] || 0) + e.amount;
   });
+
+  // Group expenses by date (daily combined view)
+  interface DailyExpenseItem {
+    id: string;
+    category: string;
+    description: string;
+    amount: number;
+    addedByName?: string;
+  }
+
+  interface DailyExpenseGroup {
+    date: string;
+    totalAmount: number;
+    transactionCount: number;
+    categories: string[];
+    items: DailyExpenseItem[];
+    addedByNames: string[];
+  }
+
+  const dailyExpensesMap: Record<string, DailyExpenseGroup> = {};
+
+  expenses.forEach((e) => {
+    if (!dailyExpensesMap[e.date]) {
+      dailyExpensesMap[e.date] = {
+        date: e.date,
+        totalAmount: 0,
+        transactionCount: 0,
+        categories: [],
+        items: [],
+        addedByNames: [],
+      };
+    }
+
+    const group = dailyExpensesMap[e.date];
+    group.totalAmount += e.amount;
+    group.transactionCount += 1;
+
+    if (e.category && !group.categories.includes(e.category)) {
+      group.categories.push(e.category);
+    }
+
+    group.items.push({
+      id: e.id,
+      category: e.category,
+      description: e.description || e.category,
+      amount: e.amount,
+      addedByName: e.addedBy?.name || e.spentBy?.name,
+    });
+
+    const adder = e.addedBy?.name || e.spentBy?.name;
+    if (adder && !group.addedByNames.includes(adder)) {
+      group.addedByNames.push(adder);
+    }
+  });
+
+  const dailyExpenses = Object.values(dailyExpensesMap).sort((a, b) => a.date.localeCompare(b.date));
 
   // Descriptive subtitle for reports
   const reportSubtitle = activeTerm
@@ -763,12 +820,41 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-extrabold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Mode Toggle (Combined vs Detailed) */}
+              <div className="no-print flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setExpenseViewMode('combined')}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    expenseViewMode === 'combined'
+                      ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  দৈনিক কম্বাইন্ড
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpenseViewMode('detailed')}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    expenseViewMode === 'detailed'
+                      ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  একক এন্ট্রি
+                </button>
+              </div>
+
+              <span className="text-xs font-extrabold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800 print:text-black print:border-slate-400">
                 টার্মে মোট মেস খরচ: ৳{totalExpensesAmount.toLocaleString('bn-BD')}
               </span>
               <button
-                onClick={() => handlePrintSection('expense-report')}
+                onClick={() => {
+                  setExpenseViewMode('combined');
+                  handlePrintSection('expense-report');
+                }}
                 className="no-print px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
               >
                 <Printer className="w-4 h-4" />
@@ -793,38 +879,151 @@ export default function ReportsPage() {
           )}
 
           <div className="overflow-x-auto pt-2">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-xs">
-                <tr>
-                  <th className="px-4 py-3 rounded-l-lg">তারিখ</th>
-                  <th className="px-4 py-3">ক্যাটাগরি</th>
-                  <th className="px-4 py-3">বিবরণ / আইটেম</th>
-                  <th className="px-4 py-3 font-semibold">পরিমাণ (৳)</th>
-                  <th className="px-4 py-3 rounded-r-lg">এন্ট্রি দাতা</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {expenses.length === 0 ? (
+            {expenseViewMode === 'combined' ? (
+              /* Combined Daily Expense Table (Default & Print View) */
+              <table className="w-full text-left text-sm print:text-xs">
+                <thead className="bg-slate-100 dark:bg-slate-800/60 print:bg-slate-100 text-slate-700 dark:text-slate-300 print:text-black uppercase text-xs">
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-xs">
-                      এই মেয়াদে কোনো খরচের এন্ট্রি পাওয়া যায়নি।
-                    </td>
+                    <th className="px-3 py-2.5 rounded-l-lg w-10 text-center">#</th>
+                    <th className="px-3 py-2.5">তারিখ</th>
+                    <th className="px-3 py-2.5">ক্যাটাগরি</th>
+                    <th className="px-3 py-2.5">বিবরণ / আইটেমসমূহ</th>
+                    <th className="px-3 py-2.5 font-bold text-right">দৈনিক মোট খরচ (৳)</th>
+                    <th className="px-3 py-2.5 rounded-r-lg text-center">এন্ট্রি দাতা</th>
                   </tr>
-                ) : (
-                  expenses.map((e) => (
-                    <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white text-xs">{e.date}</td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{e.category}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">{e.description || '-'}</td>
-                      <td className="px-4 py-3 font-extrabold text-sky-600 dark:text-sky-400">
-                        ৳{e.amount.toLocaleString('bn-BD')}
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {dailyExpenses.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-xs">
+                        এই মেয়াদে কোনো খরচের এন্ট্রি পাওয়া যায়নি।
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{e.addedBy?.name || '-'}</td>
                     </tr>
-                  ))
+                  ) : (
+                    dailyExpenses.map((group, index) => (
+                      <tr key={group.date} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-3 py-2.5 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center print:text-black">
+                          {index + 1}
+                        </td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-900 dark:text-white print:text-black text-xs whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>{group.date}</span>
+                            {group.transactionCount > 1 && (
+                              <span className="no-print inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shrink-0">
+                                ({group.transactionCount} টি এন্ট্রি)
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-semibold text-xs print:text-black">
+                          {group.categories.join(', ')}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 text-xs print:text-black">
+                          {group.items.length === 1 ? (
+                            <span>{group.items[0].description || '-'}</span>
+                          ) : (
+                            <div className="space-y-0.5">
+                              {group.items.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 text-xs print:text-[10px]">
+                                  <span className="font-medium text-slate-800 dark:text-slate-200 print:text-black">• {item.description}</span>
+                                  <span className="text-slate-500 font-semibold print:text-black">(৳{item.amount.toLocaleString('bn-BD')})</span>
+                                  {group.categories.length > 1 && (
+                                    <span className="text-[10px] text-slate-400 print:text-black bg-slate-100 dark:bg-slate-800 px-1 rounded">[{item.category}]</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 font-black text-sky-600 dark:text-sky-400 print:text-black text-right text-sm">
+                          ৳{group.totalAmount.toLocaleString('bn-BD')}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-500 print:text-black text-xs text-center">
+                          {group.addedByNames.join(', ') || '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {/* Table Footer with Total */}
+                {dailyExpenses.length > 0 && (
+                  <tfoot className="bg-slate-100/80 dark:bg-slate-800/80 font-bold border-t-2 border-slate-300 dark:border-slate-700 print:border-black text-slate-900 dark:text-white print:text-black text-xs">
+                    <tr>
+                      <td colSpan={4} className="px-3 py-2.5 text-right font-extrabold uppercase">
+                        সর্বমোট খরচ (Total):
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-black text-sm text-sky-600 dark:text-sky-400 print:text-black">
+                        ৳{totalExpensesAmount.toLocaleString('bn-BD')}
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-[10px] text-slate-500 print:text-black">
+                        {dailyExpenses.length} দিন ({expenses.length} টি লেনদেন)
+                      </td>
+                    </tr>
+                  </tfoot>
                 )}
-              </tbody>
-            </table>
+              </table>
+            ) : (
+              /* Detailed Single-Entry Table */
+              <table className="w-full text-left text-sm print:text-xs">
+                <thead className="bg-slate-100 dark:bg-slate-800/60 print:bg-slate-100 text-slate-600 dark:text-slate-400 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-3 rounded-l-lg">তারিখ</th>
+                    <th className="px-4 py-3">ক্যাটাগরি</th>
+                    <th className="px-4 py-3">বিবরণ / আইটেম</th>
+                    <th className="px-4 py-3 font-semibold text-right">পরিমাণ (৳)</th>
+                    <th className="px-4 py-3 rounded-r-lg text-center">এন্ট্রি দাতা</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {expenses.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-slate-400 text-xs">
+                        এই মেয়াদে কোনো খরচের এন্ট্রি পাওয়া যায়নি।
+                      </td>
+                    </tr>
+                  ) : (
+                    expenses.map((e) => (
+                      <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white text-xs">{e.date}</td>
+                        <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold text-xs">{e.category}</td>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">{e.description || '-'}</td>
+                        <td className="px-4 py-3 font-extrabold text-sky-600 dark:text-sky-400 text-right">
+                          ৳{e.amount.toLocaleString('bn-BD')}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 text-xs text-center">{e.addedBy?.name || '-'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {expenses.length > 0 && (
+                  <tfoot className="bg-slate-100/80 dark:bg-slate-800/80 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs">
+                    <tr>
+                      <td colSpan={3} className="px-4 py-3 text-right font-extrabold uppercase">
+                        সর্বমোট খরচ:
+                      </td>
+                      <td className="px-4 py-3 text-right font-black text-sm text-sky-600 dark:text-sky-400">
+                        ৳{totalExpensesAmount.toLocaleString('bn-BD')}
+                      </td>
+                      <td className="px-4 py-3 text-center text-[10px] text-slate-500">
+                        {expenses.length} টি লেনদেন
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            )}
+          </div>
+
+          {/* Print-only Signatures Section */}
+          <div className="hidden print:grid grid-cols-2 gap-12 pt-10 mt-6 border-t border-slate-300 text-center text-xs">
+            <div>
+              <div className="border-t border-slate-800 pt-1.5 font-bold text-slate-900">ম্যানেজারের স্বাক্ষর</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">তারিখ: ______________</div>
+            </div>
+            <div>
+              <div className="border-t border-slate-800 pt-1.5 font-bold text-slate-900">হিসাব নিরীক্ষক / মেম্বার প্রতিনিধির স্বাক্ষর</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">তারিখ: ______________</div>
+            </div>
           </div>
         </div>
       </div>
