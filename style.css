@@ -1810,7 +1810,13 @@ button, input, select, textarea {
 }
 
 @media print {
+  @page {
+    size: A4 landscape;
+    margin: 6mm 8mm;
+  }
+
   *, *::before, *::after {
+    box-sizing: border-box !important;
     background: transparent !important;
     color: #000000 !important;
     box-shadow: none !important;
@@ -1818,15 +1824,17 @@ button, input, select, textarea {
   }
 
   html, body {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     margin: 0 auto;
     padding: 0;
     background: #ffffff !important;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 10pt;
-    line-height: 1.4;
+    font-size: 14px !important;
+    line-height: 1.3;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    overflow: visible !important;
   }
 
   .view-section {
@@ -1843,6 +1851,7 @@ button, input, select, textarea {
     margin-left: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
   }
 
   .content-body {
@@ -1856,35 +1865,73 @@ button, input, select, textarea {
     display: block !important;
   }
 
+  .print-header-banner h2,
+  .print-header-banner h1,
+  .panel-card h2,
+  .panel-card h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+  }
+
+  .panel-card h4,
+  .panel-card h5 {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #000000 !important;
+  }
+
+  .panel-card p,
+  .panel-card span,
+  .panel-card div,
+  .print-header-banner div,
+  .print-footer-banner div {
+    font-size: 14px !important;
+  }
+
   .panel-card {
     border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
     box-shadow: none !important;
-    padding: 1rem !important;
-    margin-bottom: 1.25rem !important;
+    padding: 0.5rem !important;
+    margin-bottom: 1rem !important;
     break-inside: avoid;
-  }
-
-  .data-table {
     width: 100% !important;
-    border-collapse: collapse !important;
+    max-width: 100% !important;
   }
 
-  .data-table th {
+  /* Tables: column width based on content & 100% A4 fit */
+  .data-table,
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .data-table th,
+  table th {
     background-color: #f1f5f9 !important;
     color: #0f172a !important;
     border: 1px solid #cbd5e1 !important;
-    padding: 6pt 8pt !important;
-    font-size: 8.5pt !important;
+    padding: 4px 6px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     text-transform: uppercase;
+    width: auto !important;
+    white-space: nowrap !important;
   }
 
-  .data-table td {
+  .data-table td,
+  table td {
     border: 1px solid #cbd5e1 !important;
-    padding: 6pt 8pt !important;
-    font-size: 8.5pt !important;
+    padding: 4px 6px !important;
+    font-size: 14px !important;
     color: #0f172a !important;
+    width: auto !important;
+    white-space: nowrap !important;
   }
 
   tr {
@@ -1897,6 +1944,7 @@ button, input, select, textarea {
     color: #000000 !important;
     background: transparent !important;
     font-weight: 700 !important;
+    font-size: 14px !important;
   }
 }
 

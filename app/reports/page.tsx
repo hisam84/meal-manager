@@ -347,8 +347,72 @@ export default function ReportsPage() {
     ? `ম্যানেজার: ${activeManagerName} | মেয়াদ: ${activeTerm.startDate} থেকে ${activeTerm.endDate} (মোট ${gridDates.length} দিন)`
     : `ক্যালেন্ডার মাস: ${month}`;
 
+  // Group expenses by date for itemized daily report table
+  interface DailyExpenseItem {
+    description: string;
+    amount: number;
+    category: string;
+    addedBy?: string;
+  }
+
+  interface DailyExpenseRow {
+    date: string;
+    categories: string[];
+    items: DailyExpenseItem[];
+    totalAmount: number;
+    addedBy: string;
+  }
+
+  const dailyExpensesMap: Record<string, DailyExpenseRow> = {};
+  expenses.forEach((e) => {
+    if (!dailyExpensesMap[e.date]) {
+      dailyExpensesMap[e.date] = {
+        date: e.date,
+        categories: [],
+        items: [],
+        totalAmount: 0,
+        addedBy: e.addedBy?.name || '-',
+      };
+    }
+    const row = dailyExpensesMap[e.date];
+    if (e.category && !row.categories.includes(e.category)) {
+      row.categories.push(e.category);
+    }
+    row.items.push({
+      description: e.description || '-',
+      amount: e.amount,
+      category: e.category,
+      addedBy: e.addedBy?.name,
+    });
+    row.totalAmount += e.amount;
+  });
+
+  const dailyExpensesList = Object.values(dailyExpensesMap).sort((a, b) => a.date.localeCompare(b.date));
+
+  const SignatureBlock = () => (
+    <div className="mt-8 pt-6 grid grid-cols-2 gap-8 text-center text-xs text-slate-900 dark:text-slate-100 print:mt-10">
+      <div>
+        <div className="border-t-2 border-slate-800 dark:border-slate-300 w-52 mx-auto pt-1 font-extrabold text-slate-900 dark:text-white">
+          ম্যানেজারের স্বাক্ষর
+        </div>
+        <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-semibold">
+          তারিখ: ___________________
+        </div>
+      </div>
+      <div>
+        <div className="border-t-2 border-slate-800 dark:border-slate-300 w-64 mx-auto pt-1 font-extrabold text-slate-900 dark:text-white">
+          হিসাব নিরীক্ষক / মেম্বার প্রতিনিধির স্বাক্ষর
+        </div>
+        <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-semibold">
+          তারিখ: ___________________
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <PageShell user={user} onLogout={handleLogout} title="ম্যানেজার-ভিত্তিক পূর্ণাঙ্গ রিপোর্ট">
+
       {/* Header Controls: Primary Manager Selector */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm no-print">
         <div>
@@ -533,7 +597,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-center text-xs border-collapse">
+            <table className="meal-matrix-table w-full text-center text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
                   <th className="px-2 py-2 text-center sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-700 w-10">
@@ -820,6 +884,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
+<<<<<<< HEAD
             <div className="flex flex-wrap items-center gap-3">
               {/* View Mode Toggle (Combined vs Detailed) */}
               <div className="no-print flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
@@ -849,6 +914,11 @@ export default function ReportsPage() {
 
               <span className="text-xs font-extrabold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800 print:text-black print:border-slate-400">
                 টার্মে মোট মেস খরচ: ৳{totalExpensesAmount.toLocaleString('bn-BD')}
+=======
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 print:border-slate-600">
+                টার্মে মোট মেস খরচ: <strong>৳{totalExpensesAmount.toLocaleString('bn-BD')}</strong>
+>>>>>>> 5902e1e (feat: optimize printable reports for A4 paper fit, high contrast print colors, and daily itemized expense format)
               </span>
               <button
                 onClick={() => {
@@ -863,15 +933,22 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Category Breakdown Table */}
+          {/* Category Breakdown Cards */}
           {Object.keys(expensesByCategory).length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">ক্যাটাগরিভিত্তিক খরচের সামারি</h4>
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                ক্যাটাগরিভিত্তিক খরচের সামারি
+              </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                 {Object.entries(expensesByCategory).map(([cat, amt]) => (
-                  <div key={cat} className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs">
-                    <span className="text-slate-500 block font-medium">{cat}</span>
-                    <strong className="text-slate-900 dark:text-white text-sm">৳{amt.toLocaleString('bn-BD')}</strong>
+                  <div
+                    key={cat}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 text-xs shadow-sm"
+                  >
+                    <span className="text-slate-600 dark:text-slate-400 block font-semibold">{cat}</span>
+                    <strong className="text-slate-900 dark:text-white text-sm font-extrabold">
+                      ৳{amt.toLocaleString('bn-BD')}
+                    </strong>
                   </div>
                 ))}
               </div>
@@ -879,6 +956,7 @@ export default function ReportsPage() {
           )}
 
           <div className="overflow-x-auto pt-2">
+<<<<<<< HEAD
             {expenseViewMode === 'combined' ? (
               /* Combined Daily Expense Table (Default & Print View) */
               <table className="w-full text-left text-sm print:text-xs">
@@ -897,6 +975,63 @@ export default function ReportsPage() {
                     <tr>
                       <td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-xs">
                         এই মেয়াদে কোনো খরচের এন্ট্রি পাওয়া যায়নি।
+=======
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 uppercase text-xs font-bold">
+                <tr>
+                  <th className="px-3 py-2.5 w-10 text-center">#</th>
+                  <th className="px-3 py-2.5 w-28">তারিখ</th>
+                  <th className="px-3 py-2.5 w-32">ক্যাটাগরি</th>
+                  <th className="px-4 py-2.5">বিবরণ / আইটেমসমূহ</th>
+                  <th className="px-4 py-2.5 w-36 text-right font-bold">দৈনিক মোট খরচ (৳)</th>
+                  <th className="px-4 py-2.5 w-32">এন্ট্রি দাতা</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {dailyExpensesList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-xs">
+                      এই মেয়াদে কোনো খরচের এন্ট্রি পাওয়া যায়নি।
+                    </td>
+                  </tr>
+                ) : (
+                  dailyExpensesList.map((row, index) => (
+                    <tr key={row.date} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="px-3 py-2.5 text-center font-bold text-slate-700 dark:text-slate-300 text-xs">
+                        {index + 1}
+                      </td>
+                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap text-xs">
+                        {row.date}
+                      </td>
+                      <td className="px-3 py-2.5 font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                        {row.categories.join(', ')}
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-900 dark:text-slate-100 text-xs">
+                        {row.items.length === 1 ? (
+                          <span className="font-medium">{row.items[0].description}</span>
+                        ) : (
+                          <div className="space-y-1">
+                            {row.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-slate-700 dark:text-slate-300 font-bold">•</span>
+                                <span className="font-medium">{item.description}</span>
+                                <strong className="font-bold text-slate-900 dark:text-white">
+                                  (৳{item.amount.toLocaleString('bn-BD')})
+                                </strong>
+                                <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">
+                                  [{item.category}]
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 font-extrabold text-right text-slate-900 dark:text-white whitespace-nowrap text-sm">
+                        ৳{row.totalAmount.toLocaleString('bn-BD')}
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                        {row.addedBy}
+>>>>>>> 5902e1e (feat: optimize printable reports for A4 paper fit, high contrast print colors, and daily itemized expense format)
                       </td>
                     </tr>
                   ) : (
@@ -961,6 +1096,7 @@ export default function ReportsPage() {
                     </tr>
                   </tfoot>
                 )}
+<<<<<<< HEAD
               </table>
             ) : (
               /* Detailed Single-Entry Table */
@@ -1024,7 +1160,28 @@ export default function ReportsPage() {
               <div className="border-t border-slate-800 pt-1.5 font-bold text-slate-900">হিসাব নিরীক্ষক / মেম্বার প্রতিনিধির স্বাক্ষর</div>
               <div className="text-[10px] text-slate-500 mt-0.5">তারিখ: ______________</div>
             </div>
+=======
+              </tbody>
+              {dailyExpensesList.length > 0 && (
+                <tfoot className="border-t-2 border-slate-700 dark:border-slate-300 bg-slate-100 dark:bg-slate-800/80 font-bold">
+                  <tr>
+                    <td colSpan={4} className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white text-xs">
+                      সর্বমোট খরচ (TOTAL):
+                    </td>
+                    <td className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white text-sm">
+                      ৳{totalExpensesAmount.toLocaleString('bn-BD')}
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold text-slate-800 dark:text-slate-200 text-xs">
+                      {dailyExpensesList.length} দিন ({expenses.length} টি লেনদেন)
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+>>>>>>> 5902e1e (feat: optimize printable reports for A4 paper fit, high contrast print colors, and daily itemized expense format)
           </div>
+
+          <SignatureBlock />
         </div>
       </div>
     </PageShell>
