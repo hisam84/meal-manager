@@ -375,20 +375,20 @@ export default function ReportsPage() {
   const dailyExpensesList = Object.values(dailyExpensesMap).sort((a, b) => a.date.localeCompare(b.date));
 
   const SignatureBlock = () => (
-    <div className="mt-8 pt-6 grid grid-cols-2 gap-8 text-center text-xs text-slate-900 dark:text-slate-100 print:mt-10">
+    <div className="signature-block mt-8 pt-6 grid grid-cols-2 gap-8 text-center text-xs print:mt-10">
       <div>
-        <div className="border-t-2 border-slate-800 dark:border-slate-300 w-52 mx-auto pt-1 font-extrabold text-slate-900 dark:text-white">
+        <div className="border-t-2 border-slate-900 dark:border-slate-100 print:!border-black w-56 mx-auto pt-1.5 font-bold text-slate-900 dark:text-white print:!text-black text-sm">
           ম্যানেজারের স্বাক্ষর
         </div>
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-semibold">
+        <div className="text-xs text-slate-700 dark:text-slate-300 print:!text-black mt-1.5 font-semibold">
           তারিখ: ___________________
         </div>
       </div>
       <div>
-        <div className="border-t-2 border-slate-800 dark:border-slate-300 w-64 mx-auto pt-1 font-extrabold text-slate-900 dark:text-white">
+        <div className="border-t-2 border-slate-900 dark:border-slate-100 print:!border-black w-64 mx-auto pt-1.5 font-bold text-slate-900 dark:text-white print:!text-black text-sm">
           হিসাব নিরীক্ষক / মেম্বার প্রতিনিধির স্বাক্ষর
         </div>
-        <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-semibold">
+        <div className="text-xs text-slate-700 dark:text-slate-300 print:!text-black mt-1.5 font-semibold">
           তারিখ: ___________________
         </div>
       </div>
@@ -595,8 +595,8 @@ export default function ReportsPage() {
                             : 'bg-slate-100/60 dark:bg-slate-800/60 date-col-plain'
                         }`}
                       >
-                        <span className="block font-bold text-[11px]">{item.displayLabel}</span>
-                        <span className="block text-[9px] font-normal text-slate-400">{item.monthName}</span>
+                        <span className="block font-black text-[12px] text-slate-900 dark:text-white print:!text-black">{item.displayLabel}</span>
+                        <span className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 print:!text-black">{item.monthName}</span>
                       </th>
                     );
                   })}

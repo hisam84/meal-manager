@@ -213,15 +213,24 @@ html {
     color: #000000 !important;
   }
 
-  /* Shaded alternating date columns in print */
+  /* Shaded alternating date columns in print with clear distinction */
   .print-section table.meal-matrix-table th.date-col-shaded,
   .print-section table.meal-matrix-table td.date-col-shaded {
-    background-color: #e2e8f0 !important;
+    background-color: #cbd5e1 !important;
+    color: #000000 !important;
   }
 
   .print-section table.meal-matrix-table th.date-col-plain,
   .print-section table.meal-matrix-table td.date-col-plain {
     background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Ensure meal matrix headers and text are dark and sharp */
+  .print-section table.meal-matrix-table th span,
+  .print-section table.meal-matrix-table th {
+    color: #000000 !important;
+    font-weight: 800 !important;
   }
 
   /* Zebra striping for table rows in print */
@@ -256,25 +265,43 @@ html {
   }
 
   /* Fix Category & Overview summary cards in print */
-  .print-section .grid > div {
+  .print-section .grid:not(.signature-block) > div {
     background-color: #ffffff !important;
     border: 1px solid #64748b !important;
     box-shadow: none !important;
     padding: 6px 8px !important;
   }
 
-  .print-section .grid > div span {
+  .print-section .grid:not(.signature-block) > div span {
     color: #334155 !important;
     font-weight: 600 !important;
     font-size: 13px !important;
   }
 
-  .print-section .grid > div strong,
-  .print-section .grid > div .text-xl,
-  .print-section .grid > div .text-2xl {
+  .print-section .grid:not(.signature-block) > div strong,
+  .print-section .grid:not(.signature-block) > div .text-xl,
+  .print-section .grid:not(.signature-block) > div .text-2xl {
     color: #000000 !important;
     font-weight: 800 !important;
     font-size: 16px !important;
+  }
+
+  /* Clean Signature Block in print - No outer box, crisp solid top line */
+  .signature-block,
+  .signature-block > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .signature-block .border-t-2 {
+    border-top: 2px solid #000000 !important;
+  }
+
+  .signature-block * {
+    color: #000000 !important;
+    font-weight: 700 !important;
   }
 
   /* Total Footer in print */
