@@ -135,15 +135,15 @@ export default function SummaryPage() {
       </div>
 
       {/* Main Printable Container - Starts at page top when printing */}
-      <div className="print-container space-y-6">
+      <div className="print-container print-section space-y-4 print:space-y-3">
         {/* Printable Official Header Banner (Hidden on Screen, Appears on Print) */}
-        <div className="hidden print:block border-b-2 border-slate-900 pb-3 mb-4">
+        <div className="hidden print:block border-b-2 border-slate-900 pb-2 mb-2">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-xl font-black text-slate-900 tracking-tight">
                 🍽️ মেস মিল ট্র্যাকার - মাসিক সামগ্রিক প্রতিবেদন ও হিসাব বিবরণী
               </h1>
-              <p className="text-xs font-bold text-slate-700 mt-1">
+              <p className="text-xs font-bold text-slate-700 mt-0.5">
                 হিসাবের মাস: {formatMonthNameBn(month)} ({month}) | নির্ভুল চূড়ান্ত অডিট কপি
               </p>
             </div>
@@ -155,38 +155,38 @@ export default function SummaryPage() {
         </div>
 
         {/* Overview KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 print:grid-cols-5 print:gap-2">
-          <div className="bg-white dark:bg-slate-900 print:bg-slate-50 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg border border-slate-200/80 dark:border-slate-800 print:border-slate-400 shadow-sm print:shadow-none">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">মোট মিল</span>
-            <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white print:text-black mt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 print:grid-cols-5 print:gap-1.5">
+          <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
+            <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">মোট মিল</span>
+            <div className="text-xl sm:text-2xl print:text-base font-extrabold text-slate-900 dark:text-white print:!text-black mt-1">
               {summary?.totalMeals || 0} টি
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 print:bg-slate-50 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg border border-slate-200/80 dark:border-slate-800 print:border-slate-400 shadow-sm print:shadow-none">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">মোট মেস খরচ</span>
-            <div className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 print:text-black mt-1">
+          <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
+            <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">মোট মেস খরচ</span>
+            <div className="text-xl sm:text-2xl print:text-base font-extrabold text-amber-600 dark:text-amber-400 print:!text-black mt-1">
               ৳{summary?.totalExpenses?.toLocaleString('bn-BD') || 0}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 print:bg-slate-50 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg border border-slate-200/80 dark:border-slate-800 print:border-slate-400 shadow-sm print:shadow-none">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">চূড়ান্ত মিল রেট</span>
-            <div className="text-xl sm:text-2xl font-bold text-sky-600 dark:text-sky-400 print:text-black mt-1">
+          <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
+            <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">চূড়ান্ত মিল রেট</span>
+            <div className="text-xl sm:text-2xl print:text-base font-extrabold text-sky-600 dark:text-sky-400 print:!text-black mt-1">
               ৳{summary?.mealRate || 0}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 print:bg-slate-50 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg border border-slate-200/80 dark:border-slate-800 print:border-slate-400 shadow-sm print:shadow-none">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">মোট সংগৃহীত জমা</span>
-            <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black mt-1">
+          <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
+            <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">মোট সংগৃহীত জমা</span>
+            <div className="text-xl sm:text-2xl print:text-base font-extrabold text-emerald-600 dark:text-emerald-400 print:!text-black mt-1">
               ৳{summary?.totalPayments?.toLocaleString('bn-BD') || 0}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 print:bg-slate-50 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg border border-slate-200/80 dark:border-slate-800 print:border-slate-400 shadow-sm print:shadow-none col-span-2 sm:col-span-1">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">অবশিষ্ট ব্যালেন্স</span>
-            <div className={`text-xl sm:text-2xl font-bold print:text-black mt-1 ${
+          <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">অবশিষ্ট ব্যালেন্স</span>
+            <div className={`text-xl sm:text-2xl print:text-base font-extrabold print:!text-black mt-1 ${
               availableBalance >= 0
                 ? 'text-teal-600 dark:text-teal-400'
                 : 'text-rose-600 dark:text-rose-400'
@@ -198,24 +198,24 @@ export default function SummaryPage() {
 
         {/* Settlement Overview Badges */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:grid-cols-2 print:gap-2">
-          <div className="bg-emerald-500/10 border border-emerald-500/30 print:border-slate-400 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg flex items-center justify-between">
+          <div className="bg-emerald-500/10 print:!bg-emerald-50 border border-emerald-500/30 print:!border-2 print:!border-emerald-600 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 print:text-black uppercase">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 print:!text-emerald-800 uppercase tracking-wide">
                 মোট পাওনা (Total Receivable)
               </span>
-              <div className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300 print:text-black mt-1">
+              <div className="text-2xl print:text-xl font-black text-emerald-700 dark:text-emerald-300 print:!text-emerald-800 mt-1">
                 ৳{summary?.totalReceivable?.toLocaleString('bn-BD') || 0}
               </div>
             </div>
             <ArrowDownRight className="w-8 h-8 text-emerald-600 dark:text-emerald-400 print:hidden" />
           </div>
 
-          <div className="bg-rose-500/10 border border-rose-500/30 print:border-slate-400 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg flex items-center justify-between">
+          <div className="bg-rose-500/10 print:!bg-rose-50 border border-rose-500/30 print:!border-2 print:!border-rose-600 p-4 sm:p-5 print:p-2.5 rounded-2xl print:rounded-lg flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 print:text-black uppercase">
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 print:!text-rose-800 uppercase tracking-wide">
                 মোট দেনা (Total Payable)
               </span>
-              <div className="text-2xl font-extrabold text-rose-700 dark:text-rose-300 print:text-black mt-1">
+              <div className="text-2xl print:text-xl font-black text-rose-700 dark:text-rose-300 print:!text-rose-800 mt-1">
                 ৳{summary?.totalPayable?.toLocaleString('bn-BD') || 0}
               </div>
             </div>
@@ -224,8 +224,8 @@ export default function SummaryPage() {
         </div>
 
         {/* Member Summary Breakdown Table */}
-        <div className="print-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-6 print:border-none print:p-0 print:shadow-none space-y-4 print:space-y-2">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 print:hidden">
             <h3 className="text-base font-bold text-slate-900 dark:text-white print:text-black">
               মেম্বার ভিত্তিক বিস্তারিত হিসাব তালিকা ({formatMonthNameBn(month)})
             </h3>

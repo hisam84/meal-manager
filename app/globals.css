@@ -138,14 +138,20 @@ html {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    margin: 0 0 15px 0 !important;
-    padding: 4px 0 !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  .print-section table tr,
+  .print-section table thead,
+  .print-section table tfoot,
+  .print-section .grid > div {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    overflow: visible !important;
   }
 
   .print-section .overflow-x-auto {
@@ -216,16 +222,31 @@ html {
     background-color: #ffffff !important;
   }
 
-  /* High contrast color overrides for all text and cards during print */
+  /* High contrast color adjustments during print */
+  .print-section,
   .print-section * {
-    color: #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Fix Category summary cards in print - pure clean white background with crisp borders and text */
+  /* Preserve explicit red and green alert colors in print */
+  .print-section .text-rose-600,
+  .print-section .text-rose-700,
+  .print-section .text-rose-800,
+  .print-section .text-rose-900 {
+    color: #b91c1c !important;
+  }
+
+  .print-section .text-emerald-600,
+  .print-section .text-emerald-700,
+  .print-section .text-emerald-800,
+  .print-section .text-emerald-900 {
+    color: #047857 !important;
+  }
+
+  /* Fix Category & Overview summary cards in print */
   .print-section .grid > div {
-    background: #ffffff !important;
+    background-color: #ffffff !important;
     border: 1px solid #64748b !important;
     box-shadow: none !important;
     padding: 6px 8px !important;
@@ -234,13 +255,15 @@ html {
   .print-section .grid > div span {
     color: #334155 !important;
     font-weight: 600 !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
-  .print-section .grid > div strong {
+  .print-section .grid > div strong,
+  .print-section .grid > div .text-xl,
+  .print-section .grid > div .text-2xl {
     color: #000000 !important;
     font-weight: 800 !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
   }
 
   /* Total Footer in print */
