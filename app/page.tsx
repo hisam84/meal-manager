@@ -252,7 +252,7 @@ export default function DashboardPage() {
                   <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  ৳{summary?.totalPayments?.toLocaleString('bn-BD') || 0}
+                  ৳{summary?.totalPayments?.toLocaleString('en-US') || 0}
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                   <Receipt className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ৳{summary?.totalExpenses?.toLocaleString('bn-BD') || 0}
+                  ৳{summary?.totalExpenses?.toLocaleString('en-US') || 0}
                 </div>
               </div>
 
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                 <div className={`text-2xl font-bold ${
                   availableBalance >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'
                 }`}>
-                  {availableBalance < 0 ? '-' : ''}৳{Math.abs(availableBalance).toLocaleString('bn-BD')}
+                  {availableBalance < 0 ? '-' : ''}৳{Math.abs(availableBalance).toLocaleString('en-US')}
                 </div>
               </div>
 
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                   <ChefHat className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                 </div>
                 <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
-                  ৳{summary?.totalCookBill?.toLocaleString('bn-BD') || 0}
+                  ৳{summary?.totalCookBill?.toLocaleString('en-US') || 0}
                 </div>
               </div>
 

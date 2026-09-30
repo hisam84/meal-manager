@@ -166,7 +166,7 @@ export default function SummaryPage() {
           <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
             <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">মোট মেস খরচ</span>
             <div className="text-xl sm:text-2xl print:text-base font-extrabold text-amber-600 dark:text-amber-400 print:!text-black mt-1">
-              ৳{summary?.totalExpenses?.toLocaleString('bn-BD') || 0}
+              ৳{summary?.totalExpenses?.toLocaleString('en-US') || 0}
             </div>
           </div>
 
@@ -180,7 +180,7 @@ export default function SummaryPage() {
           <div className="bg-white dark:bg-slate-900 print:!bg-slate-50 p-4 sm:p-5 print:p-2 rounded-2xl print:rounded-md border border-slate-200/80 dark:border-slate-800 print:!border-slate-400 shadow-sm print:shadow-none">
             <span className="text-[11px] font-bold text-slate-500 print:!text-slate-700 uppercase tracking-wider block">মোট সংগৃহীত জমা</span>
             <div className="text-xl sm:text-2xl print:text-base font-extrabold text-emerald-600 dark:text-emerald-400 print:!text-black mt-1">
-              ৳{summary?.totalPayments?.toLocaleString('bn-BD') || 0}
+              ৳{summary?.totalPayments?.toLocaleString('en-US') || 0}
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export default function SummaryPage() {
                 ? 'text-teal-600 dark:text-teal-400'
                 : 'text-rose-600 dark:text-rose-400'
             }`}>
-              {availableBalance < 0 ? '-' : ''}৳{Math.abs(availableBalance).toLocaleString('bn-BD')}
+              {availableBalance < 0 ? '-' : ''}৳{Math.abs(availableBalance).toLocaleString('en-US')}
             </div>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default function SummaryPage() {
                 মোট পাওনা (Total Receivable)
               </span>
               <div className="text-2xl print:text-xl font-black text-emerald-700 dark:text-emerald-300 print:!text-emerald-800 mt-1">
-                ৳{summary?.totalReceivable?.toLocaleString('bn-BD') || 0}
+                ৳{summary?.totalReceivable?.toLocaleString('en-US') || 0}
               </div>
             </div>
             <ArrowDownRight className="w-8 h-8 text-emerald-600 dark:text-emerald-400 print:hidden" />
@@ -216,7 +216,7 @@ export default function SummaryPage() {
                 মোট দেনা (Total Payable)
               </span>
               <div className="text-2xl print:text-xl font-black text-rose-700 dark:text-rose-300 print:!text-rose-800 mt-1">
-                ৳{summary?.totalPayable?.toLocaleString('bn-BD') || 0}
+                ৳{summary?.totalPayable?.toLocaleString('en-US') || 0}
               </div>
             </div>
             <ArrowUpRight className="w-8 h-8 text-rose-600 dark:text-rose-400 print:hidden" />
@@ -325,19 +325,19 @@ export default function SummaryPage() {
                       {Number(totalMealsSum.toFixed(2))}
                     </td>
                     <td className="px-3 py-2.5 text-right font-black">
-                      ৳{Number(totalMealCostSum.toFixed(2)).toLocaleString('bn-BD')}
+                      ৳{Number(totalMealCostSum.toFixed(2)).toLocaleString('en-US')}
                     </td>
                     <td className="px-3 py-2.5 text-right font-black">
-                      ৳{Number(totalCookBillSum.toFixed(2)).toLocaleString('bn-BD')}
+                      ৳{Number(totalCookBillSum.toFixed(2)).toLocaleString('en-US')}
                     </td>
                     <td className="px-3 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 print:text-black">
-                      ৳{Number(totalPaidSum.toFixed(2)).toLocaleString('bn-BD')}
+                      ৳{Number(totalPaidSum.toFixed(2)).toLocaleString('en-US')}
                     </td>
                     <td className="px-3 py-2.5 text-right font-black text-rose-600 dark:text-rose-400">
-                      ৳{summary?.totalPayable?.toLocaleString('bn-BD') || 0}
+                      ৳{summary?.totalPayable?.toLocaleString('en-US') || 0}
                     </td>
                     <td className="px-3 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400">
-                      ৳{summary?.totalReceivable?.toLocaleString('bn-BD') || 0}
+                      ৳{summary?.totalReceivable?.toLocaleString('en-US') || 0}
                     </td>
                   </tr>
                 </tfoot>
