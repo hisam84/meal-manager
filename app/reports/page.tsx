@@ -288,6 +288,38 @@ export default function ReportsPage() {
   const totalPaymentsAmount = payments.reduce((sum, p) => sum + p.amount, 0);
   const totalExpensesAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
 
+  // Member Detailed Summary Totals
+  const memberSummaryTotals = (displayMemberSummaries || []).reduce(
+    (acc: any, m: any) => {
+      acc.breakfast += Number(m.breakfast) || 0;
+      acc.lunch += Number(m.lunch) || 0;
+      acc.dinner += Number(m.dinner) || 0;
+      acc.totalMeals += Number(m.totalMeals) || 0;
+      acc.billableMeals += Number(m.billableMeals !== undefined ? m.billableMeals : m.totalMeals) || 0;
+      acc.mealCost += Number(m.mealCost) || 0;
+      acc.cookBill += Number(m.cookBill) || 0;
+      acc.paid += Number(m.paid) || 0;
+      if (m.balance < 0) {
+        acc.due += Math.abs(m.balance);
+      } else if (m.balance > 0) {
+        acc.surplus += m.balance;
+      }
+      return acc;
+    },
+    {
+      breakfast: 0,
+      lunch: 0,
+      dinner: 0,
+      totalMeals: 0,
+      billableMeals: 0,
+      mealCost: 0,
+      cookBill: 0,
+      paid: 0,
+      due: 0,
+      surplus: 0,
+    }
+  );
+
   // Expense Category breakdown
   const expensesByCategory: Record<string, number> = {};
   expenses.forEach((e) => {
@@ -629,6 +661,42 @@ export default function ReportsPage() {
                   );
                 })}
               </tbody>
+              <tfoot className="bg-slate-100 dark:bg-slate-800/90 font-bold border-t-2 border-slate-700 dark:border-slate-300 text-xs">
+                <tr>
+                  <td colSpan={2} className="px-3 py-2 text-right font-extrabold text-slate-900 dark:text-white sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-700">
+                    সর্বমোট মিল:
+                  </td>
+                  {gridDates.map((item) => {
+                    let dayB = 0;
+                    let dayL = 0;
+                    let dayD = 0;
+                    displayMembers.forEach((m) => {
+                      const entry = mealMap[`${m.id}_${item.fullDate}`];
+                      if (entry) {
+                        dayB += (entry.breakfast || 0) * bw;
+                        dayL += (entry.lunch || 0) * lw;
+                        dayD += (entry.dinner || 0) * dw;
+                      }
+                    });
+                    return (
+                      <Fragment key={item.fullDate}>
+                        <td className="px-1 py-1.5 font-bold text-sky-600">
+                          {formatMealVal(dayB)}
+                        </td>
+                        <td className="px-1 py-1.5 font-bold text-amber-600">
+                          {formatMealVal(dayL)}
+                        </td>
+                        <td className="px-1 py-1.5 font-bold text-purple-600 border-r border-slate-200 dark:border-slate-800">
+                          {formatMealVal(dayD)}
+                        </td>
+                      </Fragment>
+                    );
+                  })}
+                  <td className="px-3 py-2 font-black text-sky-600 dark:text-sky-400 sticky right-0 bg-slate-100 dark:bg-slate-800 z-10 border-l border-slate-200 dark:border-slate-800">
+                    {Number(memberSummaryTotals.totalMeals.toFixed(2))}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
@@ -711,6 +779,45 @@ export default function ReportsPage() {
                   </tr>
                 ))}
               </tbody>
+              {displayMemberSummaries && displayMemberSummaries.length > 0 && (
+                <tfoot className="bg-slate-100/95 dark:bg-slate-800/95 font-bold border-t-2 border-slate-700 dark:border-slate-300 text-xs">
+                  <tr>
+                    <td colSpan={3} className="px-4 py-3 text-right font-extrabold uppercase text-slate-900 dark:text-white">
+                      সর্বমোট (Total):
+                    </td>
+                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-bold">
+                      {Number(memberSummaryTotals.breakfast.toFixed(2))}
+                    </td>
+                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-bold">
+                      {Number(memberSummaryTotals.lunch.toFixed(2))}
+                    </td>
+                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-bold">
+                      {Number(memberSummaryTotals.dinner.toFixed(2))}
+                    </td>
+                    <td className="px-4 py-3 font-extrabold text-slate-900 dark:text-white">
+                      {Number(memberSummaryTotals.totalMeals.toFixed(2))}
+                    </td>
+                    <td className="px-4 py-3 font-extrabold text-amber-700 dark:text-amber-400">
+                      {Number(memberSummaryTotals.billableMeals.toFixed(2))}
+                    </td>
+                    <td className="px-4 py-3 font-extrabold text-slate-900 dark:text-white">
+                      ৳{Number(memberSummaryTotals.mealCost.toFixed(2)).toLocaleString('bn-BD')}
+                    </td>
+                    <td className="px-4 py-3 font-extrabold text-sky-600 dark:text-sky-400">
+                      ৳{Number(memberSummaryTotals.cookBill.toFixed(2)).toLocaleString('bn-BD')}
+                    </td>
+                    <td className="px-4 py-3 font-extrabold text-emerald-600 dark:text-emerald-400">
+                      ৳{Number(memberSummaryTotals.paid.toFixed(2)).toLocaleString('bn-BD')}
+                    </td>
+                    <td className="px-4 py-3 font-black text-rose-600 dark:text-rose-400 text-sm">
+                      ৳{Number(memberSummaryTotals.due.toFixed(2)).toLocaleString('bn-BD')}
+                    </td>
+                    <td className="px-4 py-3 font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                      ৳{Number(memberSummaryTotals.surplus.toFixed(2)).toLocaleString('bn-BD')}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
 
@@ -809,6 +916,19 @@ export default function ReportsPage() {
                   );
                 })}
               </tbody>
+              <tfoot className="bg-slate-100/95 dark:bg-slate-800/95 font-bold border-t-2 border-slate-700 dark:border-slate-300 text-xs">
+                <tr>
+                  <td colSpan={4} className="px-4 py-3 text-right font-extrabold uppercase text-slate-900 dark:text-white">
+                    সর্বমোট সংগৃহীত জমা (Total):
+                  </td>
+                  <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-bold">
+                    {payments.length} টি
+                  </td>
+                  <td className="px-4 py-3 font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                    ৳{totalPaymentsAmount.toLocaleString('bn-BD')}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
