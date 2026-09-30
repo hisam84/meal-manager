@@ -583,12 +583,23 @@ export default function ReportsPage() {
                   <th className="px-3 py-2 text-left sticky left-10 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-700 min-w-[130px]">
                     সদস্যের নাম
                   </th>
-                  {gridDates.map((item) => (
-                    <th key={item.fullDate} colSpan={3} className="px-1.5 py-1.5 border-r border-slate-200 dark:border-slate-700 min-w-[54px]">
-                      <span className="block font-bold text-[11px]">{item.displayLabel}</span>
-                      <span className="block text-[9px] font-normal text-slate-400">{item.monthName}</span>
-                    </th>
-                  ))}
+                  {gridDates.map((item, dIdx) => {
+                    const isShaded = dIdx % 2 === 0;
+                    return (
+                      <th
+                        key={item.fullDate}
+                        colSpan={3}
+                        className={`px-1.5 py-1.5 border-r border-slate-200 dark:border-slate-700 min-w-[54px] ${
+                          isShaded
+                            ? 'bg-slate-200/90 dark:bg-slate-700/80 date-col-shaded'
+                            : 'bg-slate-100/60 dark:bg-slate-800/60 date-col-plain'
+                        }`}
+                      >
+                        <span className="block font-bold text-[11px]">{item.displayLabel}</span>
+                        <span className="block text-[9px] font-normal text-slate-400">{item.monthName}</span>
+                      </th>
+                    );
+                  })}
                   <th className="px-3 py-2 sticky right-0 bg-slate-100 dark:bg-slate-800 z-10 border-l border-slate-200 dark:border-slate-700 min-w-[70px]">
                     মোট মিল
                   </th>
@@ -600,13 +611,40 @@ export default function ReportsPage() {
                   <th className="px-3 py-1.5 text-left sticky left-10 bg-slate-50 dark:bg-slate-800/90 z-10 border-r border-slate-200 dark:border-slate-700">
                     বেলা ➔
                   </th>
-                  {gridDates.map((item) => (
-                    <Fragment key={item.fullDate}>
-                      <th className="px-1 py-1 bg-sky-50/50 dark:bg-sky-950/20 text-sky-600">স</th>
-                      <th className="px-1 py-1 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600">দু</th>
-                      <th className="px-1 py-1 bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 border-r border-slate-200 dark:border-slate-700">রা</th>
-                    </Fragment>
-                  ))}
+                  {gridDates.map((item, dIdx) => {
+                    const isShaded = dIdx % 2 === 0;
+                    return (
+                      <Fragment key={item.fullDate}>
+                        <th
+                          className={`px-1 py-1 ${
+                            isShaded
+                              ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-800 dark:text-sky-300 font-bold date-col-shaded'
+                              : 'bg-sky-50/40 dark:bg-sky-950/20 text-sky-600 date-col-plain'
+                          }`}
+                        >
+                          স
+                        </th>
+                        <th
+                          className={`px-1 py-1 ${
+                            isShaded
+                              ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-bold date-col-shaded'
+                              : 'bg-amber-50/40 dark:bg-amber-950/20 text-amber-600 date-col-plain'
+                          }`}
+                        >
+                          দু
+                        </th>
+                        <th
+                          className={`px-1 py-1 border-r border-slate-200 dark:border-slate-700 ${
+                            isShaded
+                              ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 font-bold date-col-shaded'
+                              : 'bg-purple-50/40 dark:bg-purple-950/20 text-purple-600 date-col-plain'
+                          }`}
+                        >
+                          রা
+                        </th>
+                      </Fragment>
+                    );
+                  })}
                   <th className="px-3 py-1.5 sticky right-0 bg-slate-50 dark:bg-slate-800/90 z-10 border-l border-slate-200 dark:border-slate-700">
                     মোট
                   </th>
@@ -626,7 +664,8 @@ export default function ReportsPage() {
                       <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-10 bg-white group-even:bg-slate-50 dark:bg-slate-900 dark:group-even:bg-slate-800/90 group-hover:bg-sky-50 dark:group-hover:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-800 truncate">
                         {m.name}
                       </td>
-                      {gridDates.map((item) => {
+                      {gridDates.map((item, dIdx) => {
+                        const isShaded = dIdx % 2 === 0;
                         const entry = mealMap[`${m.id}_${item.fullDate}`];
 
                         const b = entry ? entry.breakfast : 0;
@@ -640,15 +679,19 @@ export default function ReportsPage() {
                         const dayTotal = bVal + lVal + dVal;
                         memberTotalMeals += dayTotal;
 
+                        const shadedBgClass = isShaded
+                          ? 'bg-slate-100/90 dark:bg-slate-800/80 font-semibold text-slate-800 dark:text-slate-200 date-col-shaded'
+                          : 'font-medium text-slate-600 dark:text-slate-400 date-col-plain';
+
                         return (
                           <Fragment key={item.fullDate}>
-                            <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
+                            <td className={`px-1 py-2 ${shadedBgClass}`}>
                               {formatMealVal(bVal)}
                             </td>
-                            <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
+                            <td className={`px-1 py-2 ${shadedBgClass}`}>
                               {formatMealVal(lVal)}
                             </td>
-                            <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
+                            <td className={`px-1 py-2 border-r border-slate-200 dark:border-slate-800 ${shadedBgClass}`}>
                               {formatMealVal(dVal)}
                             </td>
                           </Fragment>
@@ -666,7 +709,8 @@ export default function ReportsPage() {
                   <td colSpan={2} className="px-3 py-2 text-right font-extrabold text-slate-900 dark:text-white sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-700">
                     সর্বমোট মিল:
                   </td>
-                  {gridDates.map((item) => {
+                  {gridDates.map((item, dIdx) => {
+                    const isShaded = dIdx % 2 === 0;
                     let dayB = 0;
                     let dayL = 0;
                     let dayD = 0;
@@ -680,13 +724,13 @@ export default function ReportsPage() {
                     });
                     return (
                       <Fragment key={item.fullDate}>
-                        <td className="px-1 py-1.5 font-bold text-sky-600">
+                        <td className={`px-1 py-1.5 font-bold text-sky-600 ${isShaded ? 'bg-slate-200/90 dark:bg-slate-700/80 date-col-shaded' : 'date-col-plain'}`}>
                           {formatMealVal(dayB)}
                         </td>
-                        <td className="px-1 py-1.5 font-bold text-amber-600">
+                        <td className={`px-1 py-1.5 font-bold text-amber-600 ${isShaded ? 'bg-slate-200/90 dark:bg-slate-700/80 date-col-shaded' : 'date-col-plain'}`}>
                           {formatMealVal(dayL)}
                         </td>
-                        <td className="px-1 py-1.5 font-bold text-purple-600 border-r border-slate-200 dark:border-slate-800">
+                        <td className={`px-1 py-1.5 font-bold text-purple-600 border-r border-slate-200 dark:border-slate-800 ${isShaded ? 'bg-slate-200/90 dark:bg-slate-700/80 date-col-shaded' : 'date-col-plain'}`}>
                           {formatMealVal(dayD)}
                         </td>
                       </Fragment>

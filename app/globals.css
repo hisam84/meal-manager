@@ -213,12 +213,23 @@ html {
     color: #000000 !important;
   }
 
+  /* Shaded alternating date columns in print */
+  .print-section table.meal-matrix-table th.date-col-shaded,
+  .print-section table.meal-matrix-table td.date-col-shaded {
+    background-color: #e2e8f0 !important;
+  }
+
+  .print-section table.meal-matrix-table th.date-col-plain,
+  .print-section table.meal-matrix-table td.date-col-plain {
+    background-color: #ffffff !important;
+  }
+
   /* Zebra striping for table rows in print */
-  .print-section table tbody tr:nth-child(even) td {
+  .print-section table:not(.meal-matrix-table) tbody tr:nth-child(even) td {
     background-color: #f1f5f9 !important;
   }
 
-  .print-section table tbody tr:nth-child(odd) td {
+  .print-section table:not(.meal-matrix-table) tbody tr:nth-child(odd) td {
     background-color: #ffffff !important;
   }
 
