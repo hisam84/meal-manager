@@ -657,8 +657,8 @@ export default function ReportsPage() {
                   <th className="px-4 py-3">মিল খরচ (৳)</th>
                   <th className="px-4 py-3">খালা বিল (৳)</th>
                   <th className="px-4 py-3">মোট জমা (৳)</th>
-                  <th className="px-4 py-3 font-bold">ব্যালেন্স (৳)</th>
-                  <th className="px-4 py-3 rounded-r-lg">স্ট্যাটাস</th>
+                  <th className="px-4 py-3 font-bold text-rose-600 dark:text-rose-400">দেনা (৳)</th>
+                  <th className="px-4 py-3 rounded-r-lg font-bold text-emerald-600 dark:text-emerald-400">পাওনা (৳)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -686,25 +686,11 @@ export default function ReportsPage() {
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">৳{m.mealCost}</td>
                     <td className="px-4 py-3 text-sky-600 dark:text-sky-400">৳{m.cookBill || 0}</td>
                     <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">৳{m.paid}</td>
-                    <td className={`px-4 py-3 font-extrabold ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      ৳{m.balance}
+                    <td className="px-4 py-3 font-extrabold text-rose-600 dark:text-rose-400">
+                      {m.balance < 0 ? `৳${Math.abs(m.balance)}` : '-'}
                     </td>
-                    <td className="px-4 py-3">
-                      {m.status === 'Receivable' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                          পাওনা
-                        </span>
-                      )}
-                      {m.status === 'Payable' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
-                          দেনা
-                        </span>
-                      )}
-                      {m.status === 'Settled' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          পরিশোধিত
-                        </span>
-                      )}
+                    <td className="px-4 py-3 font-extrabold text-emerald-600 dark:text-emerald-400">
+                      {m.balance > 0 ? `৳${m.balance}` : '-'}
                     </td>
                   </tr>
                 ))}

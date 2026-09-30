@@ -252,8 +252,8 @@ export default function SummaryPage() {
                   <th className="px-3 py-2.5 text-right">মিল খরচ (৳)</th>
                   <th className="px-3 py-2.5 text-right">খালা বিল (৳)</th>
                   <th className="px-3 py-2.5 text-right">মোট জমা (৳)</th>
-                  <th className="px-3 py-2.5 font-bold text-right">ব্যালেন্স (৳)</th>
-                  <th className="px-3 py-2.5 rounded-r-lg text-center">স্ট্যাটাস</th>
+                  <th className="px-3 py-2.5 font-bold text-right text-rose-600 dark:text-rose-400">দেনা (৳)</th>
+                  <th className="px-3 py-2.5 rounded-r-lg font-bold text-right text-emerald-600 dark:text-emerald-400">পাওনা (৳)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -298,25 +298,11 @@ export default function SummaryPage() {
                       <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 print:text-slate-900 text-right">৳{m.mealCost}</td>
                       <td className="px-3 py-2.5 text-sky-600 dark:text-sky-400 print:text-slate-900 text-right">৳{m.cookBill || 0}</td>
                       <td className="px-3 py-2.5 font-semibold text-emerald-600 dark:text-emerald-400 print:text-slate-900 text-right">৳{m.paid}</td>
-                      <td className={`px-3 py-2.5 font-extrabold print:text-slate-900 text-right ${m.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {m.balance < 0 ? '-' : ''}৳{Math.abs(m.balance)}
+                      <td className="px-3 py-2.5 font-extrabold text-right text-rose-600 dark:text-rose-400">
+                        {m.balance < 0 ? `৳${Math.abs(m.balance)}` : '-'}
                       </td>
-                      <td className="px-3 py-2.5 text-center">
-                        {m.status === 'Receivable' && (
-                          <span className="status-receivable inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 print:bg-transparent print:p-0 print:border-none text-emerald-700 dark:text-emerald-300 print:text-emerald-800">
-                            পাওনা
-                          </span>
-                        )}
-                        {m.status === 'Payable' && (
-                          <span className="status-payable inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 print:bg-transparent print:p-0 print:border-none text-rose-700 dark:text-rose-300 print:text-rose-800">
-                            দেনা
-                          </span>
-                        )}
-                        {m.status === 'Settled' && (
-                          <span className="status-settled inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 print:bg-transparent print:p-0 print:border-none text-slate-600 dark:text-slate-400 print:text-slate-700">
-                            পরিশোধিত
-                          </span>
-                        )}
+                      <td className="px-3 py-2.5 font-extrabold text-right text-emerald-600 dark:text-emerald-400">
+                        {m.balance > 0 ? `৳${m.balance}` : '-'}
                       </td>
                     </tr>
                   ))
@@ -344,11 +330,11 @@ export default function SummaryPage() {
                     <td className="px-3 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 print:text-black">
                       ৳{Number(totalPaidSum.toFixed(2)).toLocaleString('bn-BD')}
                     </td>
-                    <td className={`px-3 py-2.5 text-right font-black print:text-black ${totalBalanceSum >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {totalBalanceSum < 0 ? '-' : ''}৳{Math.abs(Number(totalBalanceSum.toFixed(2))).toLocaleString('bn-BD')}
+                    <td className="px-3 py-2.5 text-right font-black text-rose-600 dark:text-rose-400">
+                      ৳{summary?.totalPayable?.toLocaleString('bn-BD') || 0}
                     </td>
-                    <td className="px-3 py-2.5 text-center text-[10px] text-slate-500 print:text-black">
-                      {displayMemberSummaries.length} জন মেম্বার
+                    <td className="px-3 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400">
+                      ৳{summary?.totalReceivable?.toLocaleString('bn-BD') || 0}
                     </td>
                   </tr>
                 </tfoot>

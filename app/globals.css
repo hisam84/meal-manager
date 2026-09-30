@@ -258,6 +258,21 @@ html {
     font-weight: 700 !important;
   }
 
+  /* Explicit Red and Green colors for Payable (দেনা) and Receivable (পাওনা) in print */
+  .print-section .text-rose-600,
+  .print-section .text-rose-700,
+  .print-section [class*="text-rose"] {
+    color: #dc2626 !important;
+    font-weight: 800 !important;
+  }
+
+  .print-section .text-emerald-600,
+  .print-section .text-emerald-700,
+  .print-section [class*="text-emerald"] {
+    color: #16a34a !important;
+    font-weight: 800 !important;
+  }
+
   .print-section .sticky {
     position: static !important;
   }
