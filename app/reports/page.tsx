@@ -1064,19 +1064,19 @@ export default function ReportsPage() {
                       <td className="px-3 py-2.5 font-semibold text-slate-800 dark:text-slate-200 text-xs">
                         {row.categories.join(', ')}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-900 dark:text-slate-100 text-xs">
+                      <td className="px-4 py-2.5 text-slate-900 dark:text-slate-100 print:!text-black text-xs">
                         {row.items.length === 1 ? (
-                          <span className="font-medium">{row.items[0].description}</span>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 print:!text-black">{row.items[0].description}</span>
                         ) : (
                           <div className="space-y-1">
                             {row.items.map((item, idx) => (
                               <div key={idx} className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-slate-700 dark:text-slate-300 font-bold">•</span>
-                                <span className="font-medium">{item.description}</span>
-                                <strong className="font-bold text-slate-900 dark:text-white">
+                                <span className="text-slate-900 dark:text-slate-200 print:!text-black font-extrabold">•</span>
+                                <span className="font-semibold text-slate-900 dark:text-slate-100 print:!text-black">{item.description}</span>
+                                <strong className="font-black text-slate-900 dark:text-white print:!text-black bg-slate-100 dark:bg-slate-800 print:!bg-transparent px-1 py-0.5 rounded text-[11px] border border-slate-200 dark:border-slate-700 print:!border-none">
                                   (৳{item.amount.toLocaleString('en-US')})
                                 </strong>
-                                <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">
+                                <span className="text-slate-600 dark:text-slate-400 print:!text-slate-700 font-bold text-[11px]">
                                   [{item.category}]
                                 </span>
                               </div>
@@ -1084,10 +1084,10 @@ export default function ReportsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 font-extrabold text-right text-slate-900 dark:text-white whitespace-nowrap text-sm">
+                      <td className="px-4 py-2.5 font-extrabold text-right text-slate-900 dark:text-white print:!text-black whitespace-nowrap text-sm">
                         ৳{row.totalAmount.toLocaleString('en-US')}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                      <td className="px-4 py-2.5 text-slate-800 dark:text-slate-200 print:!text-black text-xs font-semibold">
                         {row.addedBy}
                       </td>
                     </tr>
@@ -1097,13 +1097,13 @@ export default function ReportsPage() {
               {dailyExpensesList.length > 0 && (
                 <tfoot className="border-t-2 border-slate-700 dark:border-slate-300 bg-slate-100 dark:bg-slate-800/80 font-bold">
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white text-xs">
+                    <td colSpan={4} className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white print:!text-black text-xs">
                       সর্বমোট খরচ (TOTAL):
                     </td>
-                    <td className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white text-sm">
+                    <td className="px-4 py-3 text-right font-extrabold text-slate-900 dark:text-white print:!text-black text-sm">
                       ৳{totalExpensesAmount.toLocaleString('en-US')}
                     </td>
-                    <td className="px-4 py-3 text-center font-bold text-slate-800 dark:text-slate-200 text-xs">
+                    <td className="px-4 py-3 text-center font-bold text-slate-800 dark:text-slate-200 print:!text-black text-xs">
                       {dailyExpensesList.length} দিন ({expenses.length} টি লেনদেন)
                     </td>
                   </tr>

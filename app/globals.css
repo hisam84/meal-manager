@@ -107,7 +107,7 @@ html {
     color: #000000 !important;
   }
 
-  /* Subtitles, Paragraphs, Spans, Badges: Minimum 14px */
+  /* Subtitles, Paragraphs, Spans, Badges: Minimum 14px and solid black */
   .print-section p,
   .print-section span,
   .print-section div,
@@ -118,6 +118,7 @@ html {
   .print-section th {
     font-size: 14px !important;
     line-height: 1.3 !important;
+    color: #000000 !important;
   }
 
   /* Print Wrapper to contain all sections in natural block flow */
