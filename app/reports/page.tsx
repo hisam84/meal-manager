@@ -559,7 +559,7 @@ export default function ReportsPage() {
                 <FileSpreadsheet className="w-5 h-5 text-sky-600 no-print" />
                 <span>দৈনিক বেলাভিত্তিক মেস মিল চার্ট রিপোর্ট</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">{reportSubtitle}</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300 print:!text-black font-semibold mt-0.5">{reportSubtitle}</p>
             </div>
 
             <div className="flex items-center gap-2 no-print">
@@ -887,7 +887,7 @@ export default function ReportsPage() {
               <Wallet className="w-5 h-5 text-purple-600 no-print" />
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">মেম্বার-ওয়াইজ পেমেন্ট ও জমা রিপোর্ট</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{reportSubtitle}</p>
+                <p className="text-xs text-slate-700 dark:text-slate-300 print:!text-black font-semibold mt-0.5">{reportSubtitle}</p>
               </div>
             </div>
 
@@ -934,17 +934,17 @@ export default function ReportsPage() {
                       <td className="px-4 py-3 text-slate-500 text-xs">{m.phone}</td>
                       <td className="px-4 py-3 text-xs">
                         {userPayments.length === 0 ? (
-                          <span className="text-slate-400 italic">এই মেয়াদে কোনো জমা নেই</span>
+                          <span className="text-slate-500 dark:text-slate-400 print:!text-slate-700 font-medium italic">এই মেয়াদে কোনো জমা নেই</span>
                         ) : (
                           <div className="flex flex-wrap gap-1.5">
                             {userPayments.map((p) => (
                               <span
                                 key={p.id}
-                                className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                                className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 print:!bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-900 dark:text-white print:!text-black border border-slate-300 dark:border-slate-700 print:!border-slate-400"
                               >
-                                <span>{p.date}:</span>
-                                <strong className="text-emerald-600 dark:text-emerald-400">৳{p.amount.toLocaleString('en-US')}</strong>
-                                {p.note && <span className="text-slate-400">({p.note})</span>}
+                                <span className="font-extrabold text-slate-900 dark:text-white print:!text-black">{p.date}:</span>
+                                <strong className="text-emerald-700 dark:text-emerald-400 print:!text-emerald-700 font-black">৳{p.amount.toLocaleString('en-US')}</strong>
+                                {p.note && <span className="text-slate-600 dark:text-slate-400 print:!text-slate-700 font-medium">({p.note})</span>}
                               </span>
                             ))}
                           </div>
@@ -990,7 +990,7 @@ export default function ReportsPage() {
               <Receipt className="w-5 h-5 text-sky-600 no-print" />
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">মেস বাজার ও খরচ সংক্রান্ত রিপোর্ট</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{reportSubtitle}</p>
+                <p className="text-xs text-slate-700 dark:text-slate-300 print:!text-black font-semibold mt-0.5">{reportSubtitle}</p>
               </div>
             </div>
 
@@ -1058,7 +1058,7 @@ export default function ReportsPage() {
                       <td className="px-3 py-2.5 text-center font-bold text-slate-700 dark:text-slate-300 text-xs">
                         {index + 1}
                       </td>
-                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap text-xs">
+                      <td className="px-3 py-2.5 font-extrabold text-slate-900 dark:text-white print:!text-black whitespace-nowrap text-xs">
                         {row.date}
                       </td>
                       <td className="px-3 py-2.5 font-semibold text-slate-800 dark:text-slate-200 text-xs">
