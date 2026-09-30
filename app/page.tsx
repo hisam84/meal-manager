@@ -55,7 +55,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const loadSummary = (m: string) => {
-    fetch(`/api/summary?month=${m}`)
+    fetch(`/api/summary?month=${m}&realtime=true`)
       .then((res) => res.json())
       .then((data) => setSummary(data))
       .catch((err) => console.error(err));

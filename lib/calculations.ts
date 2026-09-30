@@ -138,7 +138,13 @@ export function getActiveMealCounts(
   };
 }
 
-export async function calculateMonthlySummary(messId: string, month: string, termId?: string): Promise<MonthlySummaryResult> {
+export async function calculateMonthlySummary(
+  messId: string,
+  month: string,
+  termId?: string,
+  options?: { realtimeCutoff?: boolean }
+): Promise<MonthlySummaryResult> {
+  const realtimeCutoff = options?.realtimeCutoff ?? false;
   const todayStr = new Date().toISOString().slice(0, 10);
 
   let termStartDate: string | undefined;
@@ -243,16 +249,31 @@ export async function calculateMonthlySummary(messId: string, month: string, ter
   const dw = messSettings?.dinnerWeight ?? 1.0;
   const weights = { bw, lw, dw };
 
-  // Process meals based on real-time consumption cutoffs
+  // Process meals based on real-time consumption cutoffs (for Dashboard if realtimeCutoff is true),
+  // or count all entered meals in the chart (for Reports, Summary, Print, Export)
   const processedMeals = meals.map((m: any) => {
-    const active = getActiveMealCounts(m, weights);
-    return {
-      ...m,
-      activeBreakfast: active.breakfast,
-      activeLunch: active.lunch,
-      activeDinner: active.dinner,
-      activeTotal: active.total,
-    };
+    if (realtimeCutoff) {
+      const active = getActiveMealCounts(m, weights);
+      return {
+        ...m,
+        activeBreakfast: active.breakfast,
+        activeLunch: active.lunch,
+        activeDinner: active.dinner,
+        activeTotal: active.total,
+      };
+    } else {
+      const b = m.breakfast || 0;
+      const l = m.lunch || 0;
+      const d = m.dinner || 0;
+      const total = (b * bw) + (l * lw) + (d * dw);
+      return {
+        ...m,
+        activeBreakfast: b,
+        activeLunch: l,
+        activeDinner: d,
+        activeTotal: total,
+      };
+    }
   });
 
   // Aggregations

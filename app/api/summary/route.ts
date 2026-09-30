@@ -13,8 +13,9 @@ export async function GET(req: Request) {
     const todayStr = new Date().toISOString().slice(0, 7); // YYYY-MM
     const month = searchParams.get('month') || todayStr;
     const termId = searchParams.get('termId') || undefined;
+    const realtimeCutoff = searchParams.get('realtime') === 'true';
 
-    const summary = await calculateMonthlySummary(currentUser.messId, month, termId);
+    const summary = await calculateMonthlySummary(currentUser.messId, month, termId, { realtimeCutoff });
     return NextResponse.json(summary);
   } catch (error: any) {
     console.error('Fetch summary error:', error);
