@@ -271,7 +271,10 @@ export default function SummaryPage() {
                   </tr>
                 ) : (
                   displayMemberSummaries.map((m: any, index: number) => (
-                    <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                    <tr
+                      key={m.userId}
+                      className="even:bg-slate-50/80 dark:even:bg-slate-800/40 odd:bg-white dark:odd:bg-slate-900 hover:bg-slate-100/60 dark:hover:bg-slate-800/70 transition-colors"
+                    >
                       <td className="px-3 py-2.5 font-semibold text-slate-400 dark:text-slate-500 print:text-black text-xs text-center">
                         {index + 1}
                       </td>

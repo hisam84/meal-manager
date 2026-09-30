@@ -207,6 +207,15 @@ html {
     color: #000000 !important;
   }
 
+  /* Zebra striping for table rows in print */
+  .print-section table tbody tr:nth-child(even) td {
+    background-color: #f1f5f9 !important;
+  }
+
+  .print-section table tbody tr:nth-child(odd) td {
+    background-color: #ffffff !important;
+  }
+
   /* High contrast color overrides for all text and cards during print */
   .print-section * {
     color: #000000 !important;

@@ -31,6 +31,16 @@ export default function ReportsPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Helper to format meal values: 0.5 -> .5, 0 -> '-'
+  const formatMealVal = (val: number) => {
+    if (!val || val === 0) return '-';
+    const str = String(val);
+    if (str.startsWith('0.')) {
+      return str.slice(1);
+    }
+    return str;
+  };
+
   // Live Meal Chart & Data States
   const [members, setMembers] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
@@ -574,11 +584,14 @@ export default function ReportsPage() {
                 {displayMembers.map((m, index) => {
                   let memberTotalMeals = 0;
                   return (
-                    <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-2 py-2 text-center font-semibold text-slate-400 dark:text-slate-500 text-xs sticky left-0 bg-white dark:bg-slate-900 z-20 border-r border-slate-200 dark:border-slate-800">
+                    <tr
+                      key={m.id}
+                      className="group even:bg-slate-50/80 dark:even:bg-slate-800/40 odd:bg-white dark:odd:bg-slate-900 hover:bg-sky-50/60 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <td className="px-2 py-2 text-center font-semibold text-slate-400 dark:text-slate-500 text-xs sticky left-0 bg-white group-even:bg-slate-50 dark:bg-slate-900 dark:group-even:bg-slate-800/90 group-hover:bg-sky-50 dark:group-hover:bg-slate-800 z-20 border-r border-slate-200 dark:border-slate-800">
                         {index + 1}
                       </td>
-                      <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-10 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 truncate">
+                      <td className="px-3 py-2 text-left font-semibold text-slate-900 dark:text-white sticky left-10 bg-white group-even:bg-slate-50 dark:bg-slate-900 dark:group-even:bg-slate-800/90 group-hover:bg-sky-50 dark:group-hover:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-800 truncate">
                         {m.name}
                       </td>
                       {gridDates.map((item) => {
@@ -598,18 +611,18 @@ export default function ReportsPage() {
                         return (
                           <Fragment key={item.fullDate}>
                             <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                              {bVal > 0 ? bVal : '-'}
+                              {formatMealVal(bVal)}
                             </td>
                             <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400">
-                              {lVal > 0 ? lVal : '-'}
+                              {formatMealVal(lVal)}
                             </td>
                             <td className="px-1 py-2 font-medium text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800">
-                              {dVal > 0 ? dVal : '-'}
+                              {formatMealVal(dVal)}
                             </td>
                           </Fragment>
                         );
                       })}
-                      <td className="px-3 py-2 font-extrabold text-sky-600 dark:text-sky-400 sticky right-0 bg-white dark:bg-slate-900 z-10 border-l border-slate-200 dark:border-slate-800">
+                      <td className="px-3 py-2 font-extrabold text-sky-600 dark:text-sky-400 sticky right-0 bg-white group-even:bg-slate-50 dark:bg-slate-900 dark:group-even:bg-slate-800/90 group-hover:bg-sky-50 dark:group-hover:bg-slate-800 z-10 border-l border-slate-200 dark:border-slate-800">
                         {Number(memberTotalMeals.toFixed(2))}
                       </td>
                     </tr>
@@ -663,7 +676,10 @@ export default function ReportsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {displayMemberSummaries?.map((m: any, index: number) => (
-                  <tr key={m.userId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                  <tr
+                    key={m.userId}
+                    className="even:bg-slate-50/80 dark:even:bg-slate-800/40 odd:bg-white dark:odd:bg-slate-900 hover:bg-slate-100/60 dark:hover:bg-slate-800/70 transition-colors"
+                  >
                     <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
                       {index + 1}
                     </td>
@@ -756,7 +772,10 @@ export default function ReportsPage() {
                   const userTotal = userPayments.reduce((sum, p) => sum + p.amount, 0);
 
                   return (
-                    <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                    <tr
+                      key={m.id}
+                      className="even:bg-slate-50/80 dark:even:bg-slate-800/40 odd:bg-white dark:odd:bg-slate-900 hover:bg-slate-100/60 dark:hover:bg-slate-800/70 transition-colors"
+                    >
                       <td className="px-4 py-3 font-semibold text-slate-400 dark:text-slate-500 text-xs text-center">
                         {index + 1}
                       </td>
@@ -868,7 +887,10 @@ export default function ReportsPage() {
                   </tr>
                 ) : (
                   dailyExpensesList.map((row, index) => (
-                    <tr key={row.date} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                    <tr
+                      key={row.date}
+                      className="even:bg-slate-50/80 dark:even:bg-slate-800/40 odd:bg-white dark:odd:bg-slate-900 hover:bg-slate-100/60 dark:hover:bg-slate-800/70 transition-colors"
+                    >
                       <td className="px-3 py-2.5 text-center font-bold text-slate-700 dark:text-slate-300 text-xs">
                         {index + 1}
                       </td>
