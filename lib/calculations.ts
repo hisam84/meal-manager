@@ -298,7 +298,9 @@ export async function calculateMonthlySummary(
 
   // Meal rate is calculated on net meals (total minus deducted)
   const netTotalMeals = Math.max(0, totalMeals - managerMealDeduction);
-  const mealRate = netTotalMeals > 0 ? totalExpenses / netTotalMeals : 0;
+  const rawMealRate = netTotalMeals > 0 ? totalExpenses / netTotalMeals : 0;
+  // Final meal rate rounded to 2 decimal places so that all member meal costs and balances count strictly according to this displayed final meal rate
+  const mealRate = Number(rawMealRate.toFixed(2));
 
   let totalReceivable = 0;
   let totalPayable = 0;
@@ -320,11 +322,11 @@ export async function calculateMonthlySummary(
       }
     }
 
-    const mealCost = billableMeals * mealRate;
+    const mealCost = Number((billableMeals * mealRate).toFixed(2));
     const cookBillAmount = parsedMemberCookBills[user.id] || (users.length > 0 ? Number((totalCookBill / users.length).toFixed(2)) : 0);
     const userPayments = payments.filter((p: any) => p.userId === user.id);
     const paid = userPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
-    const balance = paid - (mealCost + cookBillAmount);
+    const balance = Number((paid - (mealCost + cookBillAmount)).toFixed(2));
 
     // 50 Tk fixed default meal rate calculation for Low Balance Alert (Alert when balance <= 100 Tk)
     const estimatedMealRate = 50;

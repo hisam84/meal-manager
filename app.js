@@ -574,7 +574,7 @@
     const totalExpenses = calculateTotalExpenses(month);
     const totalMeals = calculateTotalMeals(month);
     if (totalMeals <= 0) return 0;
-    return totalExpenses / totalMeals;
+    return Number((totalExpenses / totalMeals).toFixed(2));
   }
 
   function calculateMemberMeals(userId, month) {
@@ -2779,7 +2779,7 @@
         .filter(e => e.date >= tItem.startDate && e.date <= tItem.endDate)
         .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
 
-      const mealRate = termMeals > 0 ? (termExpenses / termMeals) : 0;
+      const mealRate = termMeals > 0 ? Number((termExpenses / termMeals).toFixed(2)) : 0;
 
       let statusBadge = '';
       if (today >= tItem.startDate && today <= tItem.endDate) {
