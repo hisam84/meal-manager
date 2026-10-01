@@ -35,30 +35,57 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<any>(null);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [managerTerms, setManagerTerms] = useState<any[]>([]);
+  const [selectedTermId, setSelectedTermId] = useState<string>('');
   const [showTomorrowModal, setShowTomorrowModal] = useState(false);
 
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.authenticated) {
+    Promise.all([
+      fetch('/api/auth/me').then((res) => res.json()),
+      fetch('/api/manager-terms').then((res) => res.json()),
+    ])
+      .then(([authData, termsData]) => {
+        if (!authData.authenticated) {
           router.push('/login');
-        } else if (data.user.role === 'SUPERADMIN') {
+        } else if (authData.user.role === 'SUPERADMIN') {
           router.push('/superadmin');
         } else {
-          setUser(data.user);
-          loadSummary(month);
+          setUser(authData.user);
+          const todayDateStr = new Date().toISOString().slice(0, 10);
+          if (Array.isArray(termsData) && termsData.length > 0) {
+            setManagerTerms(termsData);
+            const currentActive = termsData.find(
+              (t: any) => todayDateStr >= t.startDate && todayDateStr <= t.endDate
+            );
+            const defaultTerm = currentActive || termsData[0];
+            setSelectedTermId(defaultTerm.id);
+            loadSummary(month, defaultTerm.id);
+          } else {
+            setSelectedTermId('MONTH_VIEW');
+            loadSummary(month, 'MONTH_VIEW');
+          }
         }
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
   }, [router]);
 
-  const loadSummary = (m: string) => {
-    fetch(`/api/summary?month=${m}&realtime=true`)
+  const loadSummary = (m: string, termId?: string) => {
+    const activeTermId = termId !== undefined ? termId : selectedTermId;
+    const url =
+      activeTermId && activeTermId !== 'MONTH_VIEW'
+        ? `/api/summary?termId=${activeTermId}&realtime=true`
+        : `/api/summary?month=${m}&realtime=true`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => setSummary(data))
       .catch((err) => console.error(err));
+  };
+
+  const handleTermChange = (termId: string) => {
+    setSelectedTermId(termId);
+    loadSummary(month, termId);
   };
 
   const handleLogout = async () => {
@@ -84,30 +111,74 @@ export default function DashboardPage() {
     ? summary.availableBalance
     : ((summary?.totalPayments || 0) - (summary?.totalExpenses || 0));
 
+  const activeTerm = managerTerms.find((t) => t.id === selectedTermId);
+
   return (
     <PageShell user={user} onLogout={handleLogout} title="ড্যাশবোর্ড">
           {/* Top Bar Filter & Quick Welcome */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
                 স্বাগতম, {user?.name}! 👋
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 রোলে: <span className="font-semibold text-sky-600 dark:text-sky-400">{user?.role}</span>
+                {activeTerm && (
+                  <span className="ml-2 font-medium text-emerald-600 dark:text-emerald-400">
+                    • মেয়াদ: {activeTerm.startDate} থেকে {activeTerm.endDate}
+                  </span>
+                )}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">মাস নির্বাচন:</label>
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => {
-                  setMonth(e.target.value);
-                  loadSummary(e.target.value);
-                }}
-                className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              {/* Manager Term Selector */}
+              <div className="flex-1 sm:flex-initial">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                  ম্যানেজার নির্বাচন:
+                </label>
+                <select
+                  value={selectedTermId}
+                  onChange={(e) => handleTermChange(e.target.value)}
+                  className="w-full bg-emerald-50 dark:bg-slate-800 border-2 border-emerald-300 dark:border-emerald-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm pr-8"
+                >
+                  {managerTerms.length === 0 ? (
+                    <option value="MONTH_VIEW">কোনো ম্যানেজার টার্ম নেই (ক্যালেন্ডার মাস ভিউ)</option>
+                  ) : (
+                    managerTerms.map((t) => {
+                      const todayDateStr = new Date().toISOString().slice(0, 10);
+                      const isCurrent = todayDateStr >= t.startDate && todayDateStr <= t.endDate;
+                      const name = t.user?.name || t.title || 'ম্যানেজার';
+                      return (
+                        <option key={t.id} value={t.id}>
+                          👤 {name} ({t.startDate} ➔ {t.endDate}) {isCurrent ? '⚡ [চলমান]' : ''}
+                        </option>
+                      );
+                    })
+                  )}
+                  {managerTerms.length > 0 && (
+                    <option value="MONTH_VIEW">📅 ক্যালেন্ডার মাস অনুযায়ী দেখুন</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Month input (only when month view is active) */}
+              {selectedTermId === 'MONTH_VIEW' && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                    মাস:
+                  </label>
+                  <input
+                    type="month"
+                    value={month}
+                    onChange={(e) => {
+                      setMonth(e.target.value);
+                      loadSummary(e.target.value, 'MONTH_VIEW');
+                    }}
+                    className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -290,12 +361,15 @@ export default function DashboardPage() {
 
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                  <span className="text-xs font-semibold uppercase">মিল রেট</span>
+                  <span className="text-xs font-semibold uppercase">মিল রেট (রানিং)</span>
                   <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   ৳{summary?.mealRate || 0}
                 </div>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                  রিয়েল-টাইম সময়ের কাটঅফ অনুযায়ী
+                </span>
               </div>
             </div>
           ) : (

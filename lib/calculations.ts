@@ -158,7 +158,8 @@ export async function calculateMonthlySummary(
   let globalDeductionType = messSettings?.managerDeductionType || 'NONE';
   let globalDeductionAmount = messSettings?.managerDeductionAmount || 0;
 
-  if (termId) {
+  const isMonthView = termId === 'MONTH_VIEW';
+  if (termId && !isMonthView) {
     const termObj = await prisma.managerTerm.findUnique({ where: { id: termId } });
     if (termObj) {
       termStartDate = termObj.startDate;
@@ -171,17 +172,34 @@ export async function calculateMonthlySummary(
         ? (termObj.mealDeductionAmount ?? 0)
         : globalDeductionAmount;
     }
+  } else if (!isMonthView) {
+    // If no term specified and not in explicit month view, find active manager term for today
+    const activeTerm = await prisma.managerTerm.findFirst({
+      where: {
+        messId,
+        status: 'ACTIVE',
+        startDate: { lte: todayStr },
+        endDate: { gte: todayStr },
+      },
+      orderBy: { startDate: 'desc' },
+    });
+    if (activeTerm) {
+      termStartDate = activeTerm.startDate;
+      termEndDate = activeTerm.endDate;
+      termManagerUserId = activeTerm.userId;
+      termMealDeductionType = activeTerm.mealDeductionType && activeTerm.mealDeductionType !== 'NONE'
+        ? activeTerm.mealDeductionType
+        : globalDeductionType;
+      termMealDeductionAmount = activeTerm.mealDeductionType && activeTerm.mealDeductionType !== 'NONE'
+        ? (activeTerm.mealDeductionAmount ?? 0)
+        : globalDeductionAmount;
+    } else {
+      termMealDeductionType = globalDeductionType;
+      termMealDeductionAmount = globalDeductionAmount;
+    }
   } else {
     termMealDeductionType = globalDeductionType;
     termMealDeductionAmount = globalDeductionAmount;
-    // Find active manager user if no term specified
-    const activeTerm = await prisma.managerTerm.findFirst({
-      where: { messId, status: 'ACTIVE' },
-      orderBy: { startDate: 'desc' }
-    });
-    if (activeTerm) {
-      termManagerUserId = activeTerm.userId;
-    }
   }
 
   // Get all members of the mess
